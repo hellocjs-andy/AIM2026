@@ -1,0 +1,1322 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>iARK HK 开户 Demo</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body {
+      background: #E8E8E8;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      font-family: -apple-system, 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
+      padding: 20px;
+    }
+    .phone {
+      width: 390px;
+      height: 844px;
+      background: #fff;
+      border-radius: 50px;
+      overflow: hidden;
+      position: relative;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.35);
+      flex-shrink: 0;
+    }
+    .screen {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0; left: 0;
+      display: none;
+      flex-direction: column;
+      background: #fff;
+      overflow: hidden;
+    }
+    .screen.active { display: flex; }
+
+    /* Status bar */
+    .sb {
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      flex-shrink: 0;
+    }
+    .sb-time { font-size: 15px; font-weight: 600; }
+    .sb-icons { display: flex; gap: 5px; align-items: center; }
+
+    /* Nav bar */
+    .nb {
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      flex-shrink: 0;
+    }
+    .nb-back { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+    .nb-right { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+
+    /* Progress bar */
+    .pb { height: 3px; background: #EBEBEB; flex-shrink: 0; }
+    .pb-fill { height: 100%; background: linear-gradient(to right, #C84B1A 0%, #E8906A 100%); transition: width 0.4s; }
+
+    /* Scrollable content area */
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .content::-webkit-scrollbar { display: none; }
+
+    /* Page title */
+    .ptitle { font-size: 20px; font-weight: 700; color: #1A1A1A; margin-bottom: 24px; }
+    .ptitle-sm { font-size: 18px; font-weight: 700; color: #1A1A1A; margin-bottom: 8px; }
+
+    /* Form field (dropdown style) */
+    .ff {
+      border: 1px solid #E8E8E8;
+      border-radius: 10px;
+      padding: 13px 16px;
+      margin-bottom: 12px;
+      cursor: pointer;
+      position: relative;
+      background: white;
+    }
+    .ff:active { background: #FAFAFA; }
+    .ff .fl { font-size: 13px; color: #9A9A9A; margin-bottom: 3px; line-height: 1.3; }
+    .ff .fv { font-size: 16px; font-weight: 500; color: #1A1A1A; padding-right: 24px; }
+    .ff .fp { font-size: 16px; color: #C0C0C0; }
+    .ff .fa { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); }
+    .ff .fa-up { position: absolute; right: 14px; top: 50%; transform: translateY(-50%) rotate(180deg); }
+
+    /* Text input */
+    .fi {
+      border: 1px solid #E8E8E8;
+      border-radius: 10px;
+      padding: 13px 16px;
+      margin-bottom: 12px;
+      background: white;
+    }
+    .fi .fl { font-size: 13px; color: #9A9A9A; margin-bottom: 3px; }
+    .fi input, .fi textarea {
+      width: 100%; border: none; outline: none;
+      font-size: 16px; color: #1A1A1A; font-family: inherit;
+      background: transparent;
+    }
+    .fi input::placeholder, .fi textarea::placeholder { color: #C0C0C0; }
+
+    /* Bottom buttons */
+    .bbtns {
+      padding: 12px 20px 32px;
+      display: flex;
+      gap: 12px;
+      flex-shrink: 0;
+      background: white;
+    }
+    .btn {
+      height: 52px; border-radius: 26px; border: none;
+      font-size: 17px; font-weight: 600; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-family: inherit; transition: opacity 0.15s;
+    }
+    .btn:active { opacity: 0.85; }
+    .btn-p { flex: 2; background: #C84B1A; color: white; }
+    .btn-p.dis { background: rgba(200,75,26,0.28); cursor: default; pointer-events: none; }
+    .btn-s { flex: 1; background: white; color: #C84B1A; border: 1.5px solid #C84B1A; }
+
+    /* Checkbox */
+    .cbrow { display: flex; align-items: flex-start; gap: 10px; margin: 8px 0; cursor: pointer; user-select: none; }
+    .cb {
+      width: 20px; height: 20px; border-radius: 4px;
+      border: 1.5px solid #C84B1A; display: flex; align-items: center;
+      justify-content: center; flex-shrink: 0; margin-top: 1px;
+    }
+    .cb.on { background: #C84B1A; }
+    .cbtext { font-size: 14px; color: #4A4A4A; line-height: 1.5; }
+
+    /* Radio */
+    .rdrow { display: flex; align-items: center; gap: 10px; margin: 0 0 4px; cursor: pointer; }
+    .rd {
+      width: 20px; height: 20px; border-radius: 50%;
+      border: 1.5px solid #C0C0C0;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .rd.on { border-color: #C84B1A; }
+    .rd.on::after { content: ''; width: 10px; height: 10px; background: #C84B1A; border-radius: 50%; }
+    .rdlabel { font-size: 16px; color: #1A1A1A; }
+
+    /* Option card */
+    .ocard {
+      border: 1.5px solid #E8E8E8; border-radius: 12px;
+      padding: 16px; margin-bottom: 12px;
+      display: flex; align-items: center; justify-content: space-between;
+      cursor: pointer; transition: border-color 0.15s;
+    }
+    .ocard.sel { border-color: #C84B1A; }
+    .ocard-l { display: flex; align-items: center; gap: 12px; }
+    .ocard-title { font-size: 17px; font-weight: 600; color: #1A1A1A; }
+    .ocard-sub { font-size: 13px; color: #9A9A9A; margin-top: 2px; }
+
+    /* Bottom sheet overlay */
+    .ov {
+      position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.45); z-index: 200;
+    }
+    .bs {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      background: white; border-radius: 16px 16px 0 0;
+      padding: 0 0 40px; max-height: 75%; overflow-y: auto;
+    }
+    .bs::-webkit-scrollbar { display: none; }
+    .bs-head {
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px 20px 16px; position: relative;
+      font-size: 17px; font-weight: 600; color: #1A1A1A;
+    }
+    .bs-close {
+      position: absolute; right: 20px; top: 20px;
+      cursor: pointer; color: #9A9A9A; font-size: 18px; width: 24px; height: 24px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .bs-item {
+      padding: 16px 20px; border-bottom: 1px solid #F2F2F2;
+      font-size: 16px; color: #1A1A1A; cursor: pointer;
+    }
+    .bs-item:active { background: #FAFAFA; }
+    .bs-item:last-child { border-bottom: none; }
+
+    /* Search bar */
+    .srch-wrap { padding: 0 20px 0; margin-bottom: 4px; }
+    .srch {
+      width: 100%; height: 40px; background: #F5F5F5;
+      border: none; border-radius: 20px;
+      padding: 0 16px 0 36px; font-size: 15px;
+      outline: none; font-family: inherit;
+    }
+    .srch-icon { position: absolute; left: 32px; color: #9A9A9A; font-size: 14px; line-height: 40px; }
+
+    /* Country list */
+    .sec-title {
+      font-size: 13px; color: #9A9A9A;
+      background: #F8F8F8; padding: 8px 20px;
+    }
+    .country-item {
+      padding: 14px 20px; border-bottom: 1px solid #F2F2F2;
+      display: flex; align-items: center; gap: 12px;
+      font-size: 16px; cursor: pointer;
+    }
+    .country-item:active { background: #FAFAFA; }
+    .alpha-bar {
+      position: absolute; right: 6px; top: 60px;
+      display: flex; flex-direction: column; gap: 2px;
+    }
+    .alpha-bar span { font-size: 9px; color: #9A9A9A; text-align: center; line-height: 1.4; }
+    .alpha-bar .astar { color: #C84B1A; }
+
+    /* Upload */
+    .upload-area {
+      border: 2px dashed #DDD0C8; border-radius: 12px;
+      overflow: hidden; cursor: pointer; margin-bottom: 10px;
+    }
+    .upload-inner {
+      padding: 20px;
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+    }
+    .upload-card {
+      width: 240px; height: 140px;
+      background: linear-gradient(135deg, #EEE0D8 0%, #D8C8BE 100%);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      position: relative;
+    }
+    .upload-cam {
+      background: #C84B1A; width: 48px; height: 48px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-size: 22px;
+    }
+    .upload-lbl { font-size: 13px; color: #888; margin-top: 4px; }
+    .upload-sec { display: flex; align-items: center; gap: 5px; font-size: 13px; color: #22AA66; margin-top: 6px; }
+
+    .uploaded-img {
+      width: 100%; height: 160px; border-radius: 12px;
+      background: linear-gradient(135deg, #909DB8 0%, #6070A0 100%);
+      display: flex; align-items: center; justify-content: center;
+      position: relative; overflow: hidden;
+    }
+    .del-btn {
+      position: absolute; top: 8px; right: 8px;
+      width: 28px; height: 28px; background: rgba(0,0,0,0.5);
+      border-radius: 50%; display: flex; align-items: center;
+      justify-content: center; color: white; cursor: pointer; font-size: 13px;
+    }
+
+    /* Section header */
+    .shdr { font-size: 16px; font-weight: 700; color: #1A1A1A; margin: 16px 0 12px; }
+    .shdr-row { display: flex; justify-content: space-between; align-items: center; margin: 16px 0 12px; }
+
+    /* Name grid */
+    .ngrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+    .nfield { border: 1px solid #E8E8E8; border-radius: 10px; padding: 12px 13px; }
+    .nfield .fl { font-size: 12px; color: #9A9A9A; margin-bottom: 3px; }
+    .nfield .fv { font-size: 16px; font-weight: 500; color: #1A1A1A; }
+
+    /* Info icon */
+    .iicon {
+      display: inline-flex; width: 16px; height: 16px; border-radius: 50%;
+      border: 1.5px solid #9A9A9A; align-items: center; justify-content: center;
+      font-size: 10px; color: #9A9A9A; flex-shrink: 0; font-style: italic;
+    }
+
+    /* Confirmation rows */
+    .csec { margin-bottom: 24px; }
+    .csec-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .csec-title { font-size: 17px; font-weight: 700; color: #1A1A1A; }
+    .mod-btn {
+      font-size: 13px; color: #C84B1A; border: 1px solid #C84B1A;
+      padding: 4px 12px; border-radius: 4px; cursor: pointer;
+    }
+    .inforow { display: flex; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid #F5F5F5; }
+    .inforow:last-child { border-bottom: none; }
+    .ik { font-size: 14px; color: #9A9A9A; }
+    .iv { font-size: 14px; color: #1A1A1A; font-weight: 500; }
+
+    /* Question */
+    .qtext { font-size: 15px; color: #1A1A1A; line-height: 1.6; margin-bottom: 12px; }
+    .rdgrp { display: flex; gap: 40px; margin-bottom: 24px; }
+
+    /* Tax */
+    .add-tax { border: 1.5px dashed #C84B1A; border-radius: 10px; padding: 16px; text-align: center; color: #C84B1A; font-size: 15px; cursor: pointer; margin-top: 12px; }
+
+    /* Declaration */
+    .decl-text { font-size: 14px; color: #4A4A4A; line-height: 1.7; }
+    .decl-text p { margin-bottom: 12px; }
+
+    /* Hint */
+    .hint { font-size: 12px; color: #9A9A9A; margin: -6px 0 12px; line-height: 1.5; }
+
+    /* OCR error */
+    .ocr-err { color: #C84B1A; font-size: 14px; font-weight: 600; margin-bottom: 14px; }
+
+    /* Landing */
+    .land-hdr {
+      height: 300px;
+      background: linear-gradient(180deg, #150600 0%, #2E0D00 50%, #4A1800 100%);
+      position: relative;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .land-top-icons { position: absolute; top: 52px; right: 20px; display: flex; gap: 16px; }
+    .land-top-icons span { color: #C8A07A; font-size: 14px; cursor: pointer; }
+    .iark-logo {
+      font-size: 52px; color: #C8A07A;
+      font-style: italic; font-weight: 800; letter-spacing: 3px;
+      font-family: Georgia, 'Times New Roman', serif;
+      text-align: center;
+    }
+    .city-skyline {
+      position: absolute; bottom: 0; left: 0; right: 0; height: 80px;
+      opacity: 0.3;
+    }
+    .land-card {
+      flex: 1; background: white; border-radius: 24px 24px 0 0;
+      margin-top: -24px; padding: 20px 20px 0; z-index: 1;
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    .step-row { display: flex; align-items: flex-start; margin-bottom: 24px; padding-top: 4px; }
+    .step-item { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    .step-ic {
+      width: 48px; height: 44px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center; font-size: 20px;
+    }
+    .step-ic-on { background: #C84B1A; color: white; }
+    .step-ic-off { background: #F2F2F2; color: #9A9A9A; }
+    .step-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .step-dot-on { background: #1A1A1A; }
+    .step-dot-off { background: #D0D0D0; }
+    .step-lbl { font-size: 12px; }
+    .step-lbl-on { color: #1A1A1A; font-weight: 700; }
+    .step-lbl-off { color: #9A9A9A; }
+    .step-conn { flex: 1; height: 1px; background: #E0E0E0; margin-top: 22px; margin-left: 6px; margin-right: 6px; }
+    .land-main-title { text-align: center; font-size: 19px; font-weight: 700; color: #1A1A1A; }
+    .land-deco { color: #C84B1A; font-size: 16px; text-align: center; }
+    .land-divider { height: 1px; background: linear-gradient(to right, transparent, #C84B1A, transparent); margin: 8px 0 16px; }
+    .feat-item { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; font-size: 15px; color: #333; }
+
+    /* Bottom nav */
+    .bnav { height: 76px; display: flex; border-top: 1px solid #F0F0F0; flex-shrink: 0; }
+    .bni { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; cursor: pointer; }
+    .bni-icon { font-size: 20px; color: #9A9A9A; }
+    .bni-lbl { font-size: 11px; color: #9A9A9A; }
+    .bni.on .bni-icon { color: #C84B1A; }
+    .bni.on .bni-lbl { color: #C84B1A; font-weight: 600; }
+    .bnav-center-btn {
+      background: #C84B1A; width: 52px; height: 52px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-size: 22px; margin-top: -18px;
+    }
+
+    /* Gauge */
+    .gauge-wrap { display: flex; flex-direction: column; align-items: center; padding: 36px 0 16px; }
+
+    /* Review card */
+    .rev-card {
+      background: #FFF5EE; border-radius: 12px;
+      padding: 16px; margin: 16px 20px;
+    }
+    .rev-card-title { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 700; color: #1A1A1A; margin-bottom: 10px; }
+    .rev-card-item { font-size: 14px; color: #4A4A4A; margin-bottom: 5px; }
+
+    /* Pro banner */
+    .pro-banner {
+      background: #FFF8EE; border-radius: 12px;
+      padding: 14px 16px; margin: 8px 20px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .pro-title { display: flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 700; color: #1A1A1A; margin-bottom: 4px; }
+    .pro-sub { font-size: 12px; color: #9A9A9A; }
+    .pro-btn {
+      background: #1A1A1A; color: white; border: none;
+      border-radius: 6px; padding: 8px 12px; font-size: 13px;
+      cursor: pointer; white-space: nowrap; font-family: inherit;
+    }
+
+    /* Signature screen */
+    .sig-wrap {
+      flex: 1; display: flex; flex-direction: column;
+      background: #F2F2F2; overflow: hidden;
+    }
+    .sig-canvas-area {
+      flex: 1; padding: 16px; display: flex;
+    }
+    #sigCanvas {
+      flex: 1; background: white; border-radius: 12px;
+      touch-action: none; cursor: crosshair;
+    }
+    .sig-hint-overlay {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none; color: #CCCCCC; font-size: 15px;
+      display: flex; align-items: center; gap: 6px;
+      white-space: nowrap;
+    }
+    .sig-bar {
+      background: white; padding: 12px 16px 32px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .sig-cbtext { flex: 1; font-size: 12px; color: #4A4A4A; line-height: 1.4; }
+    .sig-link { color: #C84B1A; }
+    .sig-btn-re {
+      height: 44px; padding: 0 20px; border-radius: 22px;
+      background: white; color: #C84B1A; border: 1.5px solid #C84B1A;
+      font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit;
+      flex-shrink: 0; white-space: nowrap;
+    }
+    .sig-btn-sub {
+      height: 44px; padding: 0 20px; border-radius: 22px;
+      background: #C84B1A; color: white; border: none;
+      font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit;
+      flex-shrink: 0; white-space: nowrap;
+    }
+    .sig-btn-sub.dis { background: rgba(200,75,26,0.28); pointer-events: none; }
+
+    /* Camera */
+    .cam-screen { background: #3A2010; }
+    .cam-frame { flex: 1; display: flex; align-items: center; justify-content: center; position: relative; }
+    .cam-guide {
+      width: 300px; height: 190px;
+      border: 2.5px solid #C84B1A; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .cam-lbl { color: rgba(255,255,255,0.6); font-size: 13px; }
+    .cam-bottom { padding: 24px; display: flex; justify-content: center; background: #000; }
+    .shutter {
+      width: 66px; height: 66px; border-radius: 50%;
+      background: rgba(255,255,255,0.9); border: 4px solid #888;
+      cursor: pointer;
+    }
+
+    /* Activate options — new card layout */
+    .act-cards {
+      display: flex; gap: 12px; padding: 20px 20px 0; margin-bottom: 4px;
+    }
+    .act-card {
+      flex: 1; border-radius: 14px; padding: 16px 14px 14px;
+      display: flex; flex-direction: column; min-height: 130px;
+    }
+    .act-card-gray { background: #EBEBEB; }
+    .act-card-gold { background: #E8D9A0; position: relative; overflow: hidden; }
+    .act-card-title { font-size: 15px; font-weight: 700; color: #1A1A1A; line-height: 1.4; margin-bottom: 6px; }
+    .act-card-link  { font-size: 13px; color: #B87B10; font-weight: 500; }
+    .act-card-note  { font-size: 11px; color: #B0965A; margin-top: auto; text-align: right; }
+    .act-in-btn {
+      height: 52px; width: calc(100% - 40px); border-radius: 26px;
+      background: #C84B1A; color: white; border: none;
+      font-size: 17px; font-weight: 600; cursor: pointer; font-family: inherit;
+      margin: 20px 20px 0; display: block;
+    }
+  </style>
+</head>
+<body>
+<div class="phone" id="app"></div>
+
+<script>
+// ─── STATE ───────────────────────────────────────────────
+const S = {
+  screen: 'landing',
+  hist: [],
+  identity: 'other',
+  country: '希腊',
+  docType: '希腊永久居留卡',
+  photoTaken: false,
+  bankFilled: false,
+  personalFilled: false,
+  addrFilled: false,
+  finFilled: false,
+  invFilled: false,
+  sigDrawn: false,
+  sheet: null,   // 'doc' | 'bank-name' | etc
+  pfor: null,    // country picker context
+};
+
+// ─── NAVIGATION ──────────────────────────────────────────
+function go(to, hist = true) {
+  if (hist && S.screen !== to) S.hist.push(S.screen);
+  S.screen = to;
+  render();
+}
+function back() {
+  if (S.hist.length) { S.screen = S.hist.pop(); render(); }
+}
+
+// ─── SVG / ICON HELPERS ──────────────────────────────────
+const ICO = {
+  back: `<svg width="10" height="18" viewBox="0 0 10 18" fill="none"><path d="M9 1L1 9L9 17" stroke="#1A1A1A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  phones: `<svg width="21" height="21" viewBox="0 0 24 24" fill="none"><path d="M3 18v-6a9 9 0 0 1 18 0v6" stroke="#1A1A1A" stroke-width="1.5" stroke-linecap="round"/><rect x="3" y="14" width="4" height="6" rx="2" stroke="#1A1A1A" stroke-width="1.5"/><rect x="17" y="14" width="4" height="6" rx="2" stroke="#1A1A1A" stroke-width="1.5"/></svg>`,
+  dn: `<svg width="13" height="8" viewBox="0 0 13 8" fill="none"><path d="M1 1L6.5 7L12 1" stroke="#9A9A9A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  up: `<svg width="13" height="8" viewBox="0 0 13 8" fill="none"><path d="M12 7L6.5 1L1 7" stroke="#9A9A9A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  x: `<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M1 1L15 15M15 1L1 15" stroke="#9A9A9A" stroke-width="2" stroke-linecap="round"/></svg>`,
+  chk: `<svg width="12" height="9" viewBox="0 0 12 9" fill="none"><path d="M1 4L4.5 7.5L11 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  shield: `🛡️`,
+  pencil: `✏️`,
+};
+
+// ─── REUSABLE COMPONENTS ─────────────────────────────────
+function sb(dark) {
+  const c = dark ? '#C8A07A' : '#1A1A1A';
+  return `<div class="sb" style="color:${c}">
+    <span class="sb-time">9:30</span>
+    <div class="sb-icons">
+      <svg width="16" height="11" viewBox="0 0 16 11" fill="${c}">
+        <rect x="0" y="5" width="2.5" height="6" rx="0.8"/>
+        <rect x="4" y="3.5" width="2.5" height="7.5" rx="0.8"/>
+        <rect x="8" y="1.5" width="2.5" height="9.5" rx="0.8"/>
+        <rect x="12" y="0" width="2.5" height="11" rx="0.8"/>
+      </svg>
+      <svg width="16" height="12" viewBox="0 0 20 14" fill="none" stroke="${c}" stroke-width="1.5">
+        <path d="M1 5C4 2 7.5 0.5 10 0.5S16 2 19 5M4.5 8.5C6 7 7.8 6 10 6S14 7 15.5 8.5M8 12C8.8 11.2 9.4 11 10 11S11.2 11.2 12 12"/>
+        <circle cx="10" cy="13.5" r="1.5" fill="${c}" stroke="none"/>
+      </svg>
+      <svg width="26" height="12" viewBox="0 0 26 12" fill="none">
+        <rect x="0.5" y="1" width="21" height="10" rx="2" stroke="${c}" stroke-width="1.2"/>
+        <rect x="2" y="2.5" width="16" height="7" rx="1" fill="${c}"/>
+        <path d="M23 4v4c1.2-0.5 1.2-3.5 0-4z" fill="${c}"/>
+      </svg>
+    </div>
+  </div>`;
+}
+
+function nb(showBack = true, showPh = true) {
+  return `<div class="nb">
+    ${showBack ? `<div class="nb-back" onclick="back()">${ICO.back}</div>` : `<div style="width:32px"></div>`}
+    <div></div>
+    ${showPh ? `<div class="nb-right">${ICO.phones}</div>` : `<div style="width:32px"></div>`}
+  </div>`;
+}
+
+function pb(pct) {
+  return `<div class="pb"><div class="pb-fill" style="width:${pct}%"></div></div>`;
+}
+
+function bbtns(opts = {}) {
+  const hasBack = opts.back !== false;
+  const lbl = opts.lbl || '确认并下一步';
+  const dis = opts.dis || false;
+  const act = opts.act || '';
+  return `<div class="bbtns">
+    ${hasBack ? `<button class="btn btn-s" onclick="back()">上一步</button>` : ''}
+    <button class="btn btn-p ${dis ? 'dis' : ''}" ${dis ? 'disabled' : `onclick="${act}"`}>${lbl}</button>
+  </div>`;
+}
+
+function cbx(on, lbl, toggle) {
+  return `<div class="cbrow" onclick="${toggle}">
+    <div class="cb ${on ? 'on' : ''}">${on ? ICO.chk : ''}</div>
+    <span class="cbtext">${lbl}</span>
+  </div>`;
+}
+
+function ff(lbl, val, ph, click, arrowUp = false) {
+  return `<div class="ff" onclick="${click}">
+    <div class="fl">${lbl}</div>
+    ${val ? `<div class="fv">${val}</div>` : `<div class="fp">${ph}</div>`}
+    <div class="${arrowUp ? 'fa-up' : 'fa'}">${arrowUp ? ICO.up : ICO.dn}</div>
+  </div>`;
+}
+
+function fi(lbl, val, ph, extra = '') {
+  return `<div class="fi">
+    <div class="fl">${lbl}</div>
+    <input type="text" value="${val}" placeholder="${ph}" ${extra}/>
+  </div>`;
+}
+
+// Countries
+const COUNTRIES = [
+  {f:'🇨🇳',n:'中国内地'},{f:'🇭🇰',n:'中国香港'},{f:'🇸🇬',n:'新加坡'},
+  {f:'🇲🇴',n:'中国澳门'},{f:'🇹🇼',n:'中国台湾'},{f:'🇦🇺',n:'澳大利亚'},
+  {f:'🇨🇦',n:'加拿大'},{f:'🇲🇾',n:'马来西亚'},{f:'🇬🇷',n:'希腊'},
+  {f:'🇹🇷',n:'土耳其'},{f:'🇳🇿',n:'新西兰'},{f:'🇬🇧',n:'英国'},
+  {f:'🇩🇪',n:'德国'},{f:'🇫🇷',n:'法国'},{f:'🇯🇵',n:'日本'},
+  {f:'🇰🇷',n:'韩国'},{f:'🇺🇸',n:'美国'},{f:'🇮🇳',n:'印度'},
+  {f:'🇧🇷',n:'巴西'},{f:'🇷🇺',n:'俄罗斯'},
+];
+
+// ─── GAUGE CHART ─────────────────────────────────────────
+function gauge(pct, lbl) {
+  const r = 78, cx = 100, cy = 95;
+  function pt(deg) {
+    const rad = (deg - 90) * Math.PI / 180;
+    return {x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad)};
+  }
+  const s = pt(180), e = pt(0);
+  const fa = 180 * pct / 100;
+  const fe = pt(180 - fa);
+  return `<svg width="200" height="110" viewBox="0 0 200 110">
+    <defs>
+      <linearGradient id="gg" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%" stop-color="#C84B1A"/>
+        <stop offset="100%" stop-color="#E8906A"/>
+      </linearGradient>
+    </defs>
+    <path d="M${s.x},${s.y} A${r},${r} 0 0,1 ${e.x},${e.y}" fill="none" stroke="#EBEBEB" stroke-width="8" stroke-linecap="round"/>
+    <path d="M${s.x},${s.y} A${r},${r} 0 0,1 ${fe.x},${fe.y}" fill="none" stroke="url(#gg)" stroke-width="8" stroke-linecap="round"/>
+    <circle cx="${fe.x}" cy="${fe.y}" r="5" fill="#C84B1A"/>
+    <text x="100" y="90" text-anchor="middle" font-size="36" font-weight="700" fill="#1A1A1A" font-family="-apple-system,sans-serif">${lbl}<tspan font-size="18">%</tspan></text>
+  </svg>`;
+}
+
+// ─── SCREENS ─────────────────────────────────────────────
+
+function screenLanding() {
+  return `<div class="screen active">
+    ${sb(true)}
+    <div class="land-hdr">
+      <div class="land-top-icons"><span>En</span><span>✉</span><span>🎧</span></div>
+      <svg class="city-skyline" viewBox="0 0 390 80" fill="#8B4513" xmlns="http://www.w3.org/2000/svg">
+        <rect x="10" y="40" width="18" height="40"/>
+        <rect x="8" y="30" width="4" height="50"/>
+        <rect x="25" y="55" width="12" height="25"/>
+        <rect x="40" y="20" width="25" height="60"/>
+        <rect x="38" y="12" width="6" height="68"/>
+        <rect x="70" y="45" width="20" height="35"/>
+        <rect x="95" y="30" width="30" height="50"/>
+        <rect x="93" y="18" width="5" height="62"/>
+        <rect x="130" y="50" width="15" height="30"/>
+        <rect x="150" y="35" width="22" height="45"/>
+        <rect x="178" y="15" width="12" height="65"/>
+        <rect x="176" y="8" width="3" height="72"/>
+        <rect x="195" y="40" width="28" height="40"/>
+        <rect x="230" y="25" width="20" height="55"/>
+        <rect x="228" y="15" width="4" height="65"/>
+        <rect x="255" y="42" width="16" height="38"/>
+        <rect x="276" y="30" width="24" height="50"/>
+        <rect x="305" y="18" width="30" height="62"/>
+        <rect x="303" y="10" width="5" height="70"/>
+        <rect x="340" y="38" width="18" height="42"/>
+        <rect x="362" y="45" width="20" height="35"/>
+      </svg>
+      <div style="text-align:center;position:relative;z-index:1">
+        <div style="font-size:14px;color:#C8A07A;margin-bottom:2px;letter-spacing:2px">🌿 &nbsp; 🌿</div>
+        <div class="iark-logo">i<span style="font-size:60px">A</span>RK</div>
+      </div>
+    </div>
+    <div class="land-card">
+      <div class="step-row">
+        <div class="step-item">
+          <div class="step-ic step-ic-on">📋</div>
+          <div class="step-dot step-dot-on"></div>
+          <div class="step-lbl step-lbl-on">开户</div>
+        </div>
+        <div class="step-conn"></div>
+        <div class="step-item">
+          <div class="step-ic step-ic-off">💳</div>
+          <div class="step-dot step-dot-off"></div>
+          <div class="step-lbl step-lbl-off">入金</div>
+        </div>
+        <div class="step-conn"></div>
+        <div class="step-item">
+          <div class="step-ic step-ic-off">📊</div>
+          <div class="step-dot step-dot-off"></div>
+          <div class="step-lbl step-lbl-off" style="white-space:nowrap">开启投资</div>
+        </div>
+      </div>
+      <div class="land-deco">❧</div>
+      <div class="land-main-title">一站式全球财富管理平台</div>
+      <div class="land-deco">❧</div>
+      <div class="land-divider"></div>
+      <div class="feat-item"><span style="font-size:22px">🌐</span><span>一站配置全球全品类资产</span></div>
+      <div class="feat-item"><span style="font-size:22px">🛡️</span><span>港美两地上市，安全合规双保障</span></div>
+      <div style="flex:1"></div>
+      <button class="btn btn-p" style="width:100%;margin-bottom:16px" onclick="go('identity-select')">开始开户</button>
+    </div>
+    <div class="bnav">
+      <div class="bni"><span class="bni-icon">◎</span><span class="bni-lbl">财富</span></div>
+      <div class="bni"><span class="bni-icon">📈</span><span class="bni-lbl">证券</span></div>
+      <div class="bni on">
+        <div class="bnav-center-btn">💰</div>
+        <span class="bni-lbl" style="color:#C84B1A;font-weight:700">开户</span>
+      </div>
+      <div class="bni"><span class="bni-icon">📰</span><span class="bni-lbl">资讯</span></div>
+      <div class="bni"><span class="bni-icon">👤</span><span class="bni-lbl">我的</span></div>
+    </div>
+  </div>`;
+}
+
+function screenIdentitySelect() {
+  const cards = [
+    {id:'hk', flag:'🇭🇰', title:'香港居民', sub:'持有香港永久/非永久居民身份证'},
+    {id:'macau', flag:'🇲🇴', title:'澳门居民', sub:'文案待提供', subDim:true},
+    {id:'other', flag:'', title:'其他国家/地区', sub:''},
+  ];
+  return `<div class="screen active">
+    ${sb()} ${nb()} ${pb(5)}
+    <div class="content">
+      <div class="ptitle">选择您的身份信息</div>
+      ${cards.map(c => `
+        <div class="ocard ${S.identity===c.id?'sel':''}" onclick="S.identity='${c.id}';render()">
+          <div class="ocard-l">
+            ${c.flag ? `<span style="font-size:26px">${c.flag}</span>` :
+              `<span style="width:28px;height:28px;background:#9A9A9A;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;color:white;flex-shrink:0">···</span>`}
+            <div>
+              <div class="ocard-title">${c.title}</div>
+              ${c.sub ? `<div class="ocard-sub" ${c.subDim?'style="color:#CCCCCC"':''}>${c.sub}</div>` : ''}
+            </div>
+          </div>
+          <div class="rd ${S.identity===c.id?'on':''}"></div>
+        </div>`).join('')}
+    </div>
+    ${bbtns({dis:!S.identity, act:"go('identity-verify')"})}
+  </div>`;
+}
+
+function screenIdentityVerify() {
+  const canNext = S.country && S.docType && S.photoTaken;
+  return `<div class="screen active">
+    ${sb()} ${nb()} ${pb(12)}
+    <div class="content">
+      <div class="ptitle">身份信息验证</div>
+      ${ff('证件签发国/地区', S.country, '请选择', "go('country-picker')")}
+      ${ff('开户证件', S.docType, '请选择', S.country ? "S.sheet='doc';render()" : '')}
+      ${S.country && S.docType ? `
+        <div style="margin-top:16px">
+          <div class="shdr">上传${S.docType}</div>
+          ${S.photoTaken ? `
+            <div class="upload-area" style="border:none;padding:0">
+              <div class="uploaded-img" style="margin-bottom:0">
+                <div style="color:rgba(255,255,255,0.7);font-size:13px">${S.docType} · 人像面</div>
+                <div class="del-btn" onclick="event.stopPropagation();S.photoTaken=false;render()">🗑</div>
+              </div>
+            </div>
+          ` : `
+            <div class="upload-area" onclick="go('camera')">
+              <div class="upload-inner">
+                <div class="upload-card">
+                  <div style="text-align:center">
+                    <div class="upload-cam">📷</div>
+                    <div style="font-size:13px;color:#888;margin-top:8px">${S.docType}-人像面</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `}
+          <div class="upload-sec">🛡️ 该信息仅限审核部门确认身份</div>
+        </div>
+      ` : ''}
+    </div>
+    ${bbtns({dis:!canNext, act:"go('identity-form')"})}
+    ${S.sheet==='doc' ? docSheet() : ''}
+  </div>`;
+}
+
+function screenCountryPicker() {
+  return `<div class="screen active">
+    ${sb()}
+    <div style="display:flex;align-items:center;padding:10px 20px 0;gap:12px">
+      <div onclick="back()" style="cursor:pointer;flex-shrink:0">${ICO.back}</div>
+      <div style="flex:1;text-align:center;font-size:17px;font-weight:700">其他国家/地区</div>
+      <div onclick="back()" style="cursor:pointer;flex-shrink:0">${ICO.x}</div>
+    </div>
+    <div style="padding:12px 20px 4px;position:relative">
+      <span class="srch-icon">🔍</span>
+      <input class="srch" id="cs" placeholder="请输入国家/地区" oninput="filterC()" />
+    </div>
+    <div style="flex:1;overflow-y:auto;position:relative" id="clist">
+      <div class="sec-title">常用地区</div>
+      ${COUNTRIES.map(c=>`
+        <div class="country-item" onclick="selC('${c.n}')">
+          <span style="font-size:22px">${c.f}</span><span>${c.n}</span>
+        </div>`).join('')}
+    </div>
+    <div class="alpha-bar">
+      <span class="astar">*</span>
+      ${['A','B','C','D','F','H','L','M','N','P','R','S','T','X','Y','Z'].map(a=>`<span>${a}</span>`).join('')}
+    </div>
+  </div>`;
+}
+
+function screenCamera() {
+  return `<div class="screen active cam-screen">
+    <div style="display:flex;justify-content:flex-start;padding:12px 16px 0;">
+      <div style="color:rgba(255,255,255,0.6);font-size:20px">${ICO.phones}</div>
+    </div>
+    <div class="cam-frame">
+      <div style="position:absolute;left:20px;top:50%;transform:translateY(-50%) rotate(-90deg);color:white;font-size:13px;white-space:nowrap;opacity:0.7">拍摄指引文字</div>
+      <div class="cam-guide">
+        <div class="cam-lbl">将证件对准框内</div>
+      </div>
+    </div>
+    <div class="cam-bottom">
+      <div class="shutter" onclick="takePhoto()"></div>
+    </div>
+  </div>`;
+}
+
+function screenIdentityForm() {
+  return `<div class="screen active">
+    ${sb()} ${nb()} ${pb(20)}
+    <div class="content">
+      <div class="ptitle">身份信息验证</div>
+      ${ff('证件签发国/地区', S.country, '请选择', '')}
+      ${ff('开户证件', S.docType, '请选择', '')}
+      <div style="margin-top:4px">
+        <div class="shdr">上传${S.docType}</div>
+        <div style="border-radius:12px;overflow:hidden;margin-bottom:8px;position:relative">
+          <div class="uploaded-img">
+            <div style="color:rgba(255,255,255,0.7);font-size:13px">
+              <div style="font-size:28px;margin-bottom:4px">🪪</div>
+              <div>${S.docType} · 人像面</div>
+            </div>
+            <div class="del-btn" onclick="S.photoTaken=false;go('identity-verify',false)">🗑</div>
+          </div>
+        </div>
+        <div class="upload-sec" style="margin-bottom:8px">🛡️ 该信息仅限审核部门确认身份</div>
+        <div class="ocr-err">增加OCR识别失败的提示</div>
+      </div>
+      <div class="shdr">姓名</div>
+      <div class="ngrid">
+        <div class="nfield"><div class="fl">姓</div><div class="fv">王</div></div>
+        <div class="nfield"><div class="fl">名</div><div class="fv">超</div></div>
+      </div>
+      <div class="ngrid">
+        <div class="nfield"><div class="fl">Last Name</div><div class="fv">CHAO</div></div>
+        <div class="nfield"><div class="fl">First Name</div><div class="fv">WANG</div></div>
+      </div>
+      <div class="shdr-row">
+        <span class="shdr" style="margin:0">证件信息</span>
+        <span style="font-size:13px;color:#C84B1A;cursor:pointer">查看示例</span>
+      </div>
+      <div style="font-size:13px;color:#9A9A9A;margin-bottom:10px">🪪 ${S.docType}</div>
+      ${fi('证件号码', 'GR293810219', '请填写')}
+      ${ff('证件有效期', '2029-01-01', '请选择', '')}
+      <div class="shdr">其他信息</div>
+      ${ff('出生日期', '1990-01-01', '请选择', '')}
+      ${ff('性别', '男', '请选择', '')}
+    </div>
+    ${bbtns({act:"go('bank-info')"})}
+  </div>`;
+}
+
+function screenBankInfo() {
+  const f = S.bankFilled;
+  return `<div class="screen active">
+    ${sb()} ${nb()} ${pb(28)}
+    <div class="content">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:20px">
+        <span class="ptitle" style="margin:0">银行账户信息</span>
+        <span class="iicon">i</span>
+      </div>
+      ${ff('银行所在国家/地区', '中国香港', '请选择', '')}
+      ${ff('银行名称', f?'003   渣打银行(香港)':null, '请选择', `S.bankFilled=true;render()`)}
+      <div class="ff" style="cursor:default">
+        <div style="display:flex;align-items:center;gap:4px;margin-bottom:3px">
+          <span class="fl" style="margin:0">银行户名</span><span class="iicon">i</span>
+        </div>
+        <div class="fv">WANG CHAO</div>
+        <div class="fa">${ICO.dn}</div>
+      </div>
+      <div class="fi">
+        <div style="display:flex;align-items:center;gap:4px;margin-bottom:3px">
+          <span class="fl" style="margin:0">银行账户号码</span><span class="iicon">i</span>
+        </div>
+        <input type="text" value="${f?'003 9821 4756 0':''}" placeholder="请填写"
+          oninput="if(this.value){S.bankFilled=true}" />
+      </div>
+      ${ff('支持币种', '全部币种', '请选择', '')}
+    </div>
+    ${bbtns({dis:!f, act:"go('personal-info')"})}
+  </div>`;
+}
+
+function screenPersonalInfo() {
+  const f = S.personalFilled;
+  return `<div class="screen active">
+    ${sb()} ${nb()} ${pb(38)}
+    <div class="content">
+      <div class="ptitle">个人信息</div>
+      <div class="fi">
+        <div class="fl">Email</div>
+        <input type="email" value="${f?'chenccccc@gmail.com':''}" placeholder="请填写"
+          oninput="if(this.value.includes('@')){S.personalFilled=true;render()}" />
+      </div>
+      ${cbx(true, '通过此邮箱接收对账单（请注意填写正确）', '')}
+      <div style="height:10px"></div>
+      ${ff('教育程度', f?'高等教育':null, '请选择', `S.personalFilled=true;render()`)}
+      ${ff('就业状况', f?'全职':null, '请选择', `S.personalFilled=true;render()`)}
+      ${f ? ff('公司全称', '上海可鱼科技有限公司', '请填写', '') : ''}
+      ${f ? ff('业务性质（可多选）', '通讯、商业服务', '请选择', '') : ''}
+      ${ff('您是否为任何（上市）公司的高管、董事或控股股东?', f?'否':null, '请选择', `S.personalFilled=true;render()`)}
+      ${ff('资金来源', f?'薪金':null, '请选择', `S.personalFilled=true;render()`)}
+      <div class="hint">仅用于投资风险能力评估，不做任何背调核查</div>
+    </div>
+    ${bbtns({dis:!f, act:"go('account-type')"})}
+  </div>`;
+}
+
+function screenAccountType() {
+  return `<div class="screen active">
+    ${sb()} ${nb()} ${pb(44)}
+    <div class="content">
+      <div class="ptitle-sm">您即将开通的是理财账户+证券账户</div>
+      <div style="font-size:15px;color:#666;margin-bottom:20px">请问您是否</div>
+      <div class="ff" style="cursor:default">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <span style="font-size:16px;color:#1A1A1A">开通证券融资交易功能</span>
+          <div class="cb" id="margcb" onclick="toggleMarg()">&nbsp;</div>
+        </div>
+      </div>
+    </div>
+    ${bbtns({act:"go('address')"})}
+  </div>`;
+}
+
+function screenAddress() {
+  const f = S.addrFilled;
+  return `<div class="screen active">
+    ${sb()} ${nb()} ${pb(50)}
+    <div class="content">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:20px">
+        <span class="ptitle" style="margin:0">居住地址</span>
+        <span class="iicon">i</span>
+      </div>
+      ${ff('国家/地区', f?'中国香港':null, '请选择', `S.addrFilled=true;render()`)}
+      <div class="fi">
+        <div class="fl">详细地址</div>
+        <input type="text" value="${f?'新界沙田区玫珑山13号楼6单元1201室':''}" placeholder="请填写"
+          oninput="if(this.value.length>5){S.addrFilled=true}" />
+      </div>
+      <div class="hint">请填写一个居住地址，需要具体到xx号楼xx单元xx室，如 浅水湾1号楼1203室</div>
+      ${cbx(true, '邮寄地址与居住地址相同', '')}
+      ${cbx(true, '出生地址与居住地址相同', '')}
+    </div>
+    ${bbtns({dis:!f, act:"go('financial')"})}
+  </div>`;
+}
+
+function screenFinancial() {
+  const f = S.finFilled;
+  return `<div class="screen active">
+    ${sb()} ${nb()} ${pb(58)}
+    <div class="content">
+      <div class="ptitle">财务状况</div>
+      ${ff('投资目标', f?'成长':null, '请选择', `S.finFilled=true;render()`)}
+      ${ff('可支配年度收入', f?'> 350万港元':null, '请选择', `S.finFilled=true;render()`)}
+      ${ff('流动资产总值', f?'500万 ~ 800万港元':null, '请选择', `S.finFilled=true;render()`)}
+    </div>
+    ${bbtns({dis:!f, act:"go('invest-exp')"})}
+  </div>`;
+}
+
+function screenInvestExp() {
+  const f = S.invFilled;
+  const cats = ['债券','外汇','证券','衍生性产品','贵金属','结构性产品','基金','虚拟资产'];
+  return `<div class="screen active">
+    ${sb()} ${nb()} ${pb(64)}
+    <div class="content">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:20px">
+        <span class="ptitle" style="margin:0">投资经验</span>
+        <span class="iicon">i</span>
+      </div>
+      ${cats.map(c=>ff(c, f?'五年以上':null, '请选择', `S.invFilled=true;render()`)).join('')}
+    </div>
+    ${bbtns({dis:!f, act:"go('tax-info')"})}
+  </div>`;
+}
+
+function screenTaxInfo() {
+  return `<div class="screen active">
+    ${sb()} ${nb()} ${pb(70)}
+    <div class="content">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+        <div style="display:flex;align-items:center;gap:6px">
+          <span class="ptitle" style="margin:0">税务信息</span>
+          <span class="iicon">i</span>
+        </div>
+        <span style="font-size:14px;color:#9A9A9A;cursor:pointer">没有税务编号</span>
+      </div>
+      ${ff('税务管辖区（CRS & W-8BEN）', '希腊', '请选择', '')}
+      <div class="fi">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
+          <span class="fl" style="margin:0">税务编号</span>
+          <span style="font-size:13px;color:#C84B1A;cursor:pointer">解释说明</span>
+        </div>
+        <input type="text" value="293810219" placeholder="请填写" />
+      </div>
+      <div class="add-tax">+ 添加税务信息</div>
+    </div>
+    ${bbtns({act:"go('other-info')"})}
+  </div>`;
+}
+
+function screenOtherInfo() {
+  return `<div class="screen active">
+    ${sb()} ${nb()} ${pb(76)}
+    <div class="content">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:20px">
+        <span class="ptitle" style="margin:0">其他信息</span>
+        <span class="iicon">i</span>
+      </div>
+      <div class="qtext">您是否为香港证券及期货事务监察委员会 (证监会) 持牌或注册实体的雇员或代表。</div>
+      <div class="rdgrp">
+        <div class="rdrow"><div class="rd"></div><span class="rdlabel">是</span></div>
+        <div class="rdrow"><div class="rd on"></div><span class="rdlabel">否</span></div>
+      </div>
+      <div class="qtext">您是否为和Ark HK或其关联公司的董事或雇员沒有任何关系。</div>
+      <div class="rdgrp">
+        <div class="rdrow"><div class="rd"></div><span class="rdlabel">是</span></div>
+        <div class="rdrow"><div class="rd on"></div><span class="rdlabel">否</span></div>
+      </div>
+      <div class="qtext">您或您的直系亲属是否政治人物或其有关联之人士、高级政府官员或国有企业高级行政人员。（注：政治人物指国家元首、政府首长、高级政府、司法或军事官员、国企高级行政人员及重要政党干事）</div>
+      <div class="rdgrp">
+        <div class="rdrow"><div class="rd"></div><span class="rdlabel">是</span></div>
+        <div class="rdrow"><div class="rd on"></div><span class="rdlabel">否</span></div>
+      </div>
+    </div>
+    ${bbtns({act:"go('confirm-info')"})}
+  </div>`;
+}
+
+function screenConfirmInfo() {
+  return `<div class="screen active">
+    ${sb()} ${nb()} ${pb(82)}
+    <div class="content">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:20px">
+        <span class="ptitle" style="margin:0">信息确认</span>
+        <span class="iicon">i</span>
+      </div>
+      <div class="csec">
+        <div class="csec-hdr">
+          <div class="csec-title">身份信息</div>
+          <div class="mod-btn" onclick="go('identity-verify',true)">修改</div>
+        </div>
+        <div class="inforow"><span class="ik">居民身份所属国家/地区</span><span class="iv">希腊</span></div>
+        <div class="inforow"><span class="ik">开户证件</span><span class="iv">希腊永久居留卡</span></div>
+      </div>
+      <div class="csec">
+        <div class="csec-hdr">
+          <div class="csec-title">证件信息</div>
+          <div class="mod-btn" onclick="go('identity-form',true)">修改</div>
+        </div>
+        <div style="font-size:15px;font-weight:600;color:#1A1A1A;margin-bottom:8px">姓名</div>
+        <div class="inforow"><span class="ik">中文姓名</span><span class="iv">王 超</span></div>
+        <div class="inforow"><span class="ik">英文姓名</span><span class="iv">WANG CHAO</span></div>
+        <div style="font-size:15px;font-weight:600;color:#1A1A1A;margin:12px 0 8px">希腊永久居留卡</div>
+        <div class="inforow"><span class="ik">证件号码</span><span class="iv">GR293810219</span></div>
+        <div class="inforow"><span class="ik">证件有效期</span><span class="iv">2029-01-01</span></div>
+        <div style="font-size:15px;font-weight:600;color:#1A1A1A;margin:12px 0 8px">其他信息</div>
+        <div class="inforow"><span class="ik">出生日期</span><span class="iv">1990-01-01</span></div>
+        <div class="inforow"><span class="ik">性别</span><span class="iv">男</span></div>
+      </div>
+    </div>
+    ${bbtns({act:"go('declaration')"})}
+  </div>`;
+}
+
+function screenDeclaration() {
+  return `<div class="screen active">
+    ${sb()} ${nb()} ${pb(88)}
+    <div class="content">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:20px">
+        <span class="ptitle" style="margin:0">声明</span>
+        <span class="iicon">i</span>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start">
+        <div class="cb on" style="margin-top:2px;flex-shrink:0">${ICO.chk}</div>
+        <div>
+          <div style="font-size:14px;font-weight:700;color:#1A1A1A;margin-bottom:8px">本人确认：</div>
+          <div class="decl-text">
+            <p>1）本人确认在开户文件录入的电子签名为真实意愿的表示。本人理解、确认并同意受上述开户文件，所附条款及任何所附文件之约束；</p>
+            <p>2）我已阅读并同意所附条款中个人资料收集声明，并同意 Ark HK 可按该声明目的或《隐私条例》允许的其他用途，使用我提供的所有个人信息；</p>
+            <p>3）我同意授权 Ark HK 依法向联交所及证监会传输个人资料，以符合香港投资者识别码及汇报制度要求。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    ${bbtns({lbl:'签署开户文件', act:"go('signature')"})}
+  </div>`;
+}
+
+function screenSignature() {
+  return `<div class="screen active" style="background:#F2F2F2">
+    <div style="display:flex;justify-content:space-between;padding:12px 16px 0;flex-shrink:0">
+      <div onclick="back()" style="cursor:pointer">${ICO.back}</div>
+      <div>${ICO.phones}</div>
+    </div>
+    <div class="sig-canvas-area">
+      <div style="position:relative;flex:1;display:flex">
+        <canvas id="sigCanvas" style="flex:1;background:white;border-radius:12px;touch-action:none;cursor:crosshair;min-height:400px"></canvas>
+        ${!S.sigDrawn ? `<div id="sigHint" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;color:#CCCCCC;font-size:15px;display:flex;align-items:center;gap:6px;white-space:nowrap">✏️ 请在此签写您的中文名</div>` : ''}
+      </div>
+    </div>
+    <div class="sig-bar">
+      <div style="display:flex;align-items:flex-start;gap:8px;flex:1;cursor:pointer" onclick="S.sigDrawn=!S.sigDrawn;render()">
+        <div class="cb ${S.sigDrawn?'on':''}" style="flex-shrink:0;margin-top:1px">${S.sigDrawn?ICO.chk:''}</div>
+        <span class="sig-cbtext">本人已阅读<span class="sig-link">开户文件</span>，理解并同意电子签名等同于本人的手写签名</span>
+      </div>
+      <button class="sig-btn-re" onclick="clearSig()">重写</button>
+      <button class="sig-btn-sub ${!S.sigDrawn?'dis':''}" ${S.sigDrawn?`onclick="go('review-90')"`:'disabled'}>提交开户</button>
+    </div>
+  </div>`;
+}
+
+function screenReview90() {
+  return `<div class="screen active">
+    ${sb()} ${nb()}
+    <div style="flex:1;overflow-y:auto">
+      <div class="gauge-wrap">
+        ${gauge(90, '90')}
+        <div style="font-size:18px;font-weight:700;color:#1A1A1A;margin-top:10px">已收到您的资料，正在审核中</div>
+        <div style="font-size:13px;color:#9A9A9A;margin-top:4px">我们将在1～2个工作日内完成审核</div>
+      </div>
+      <div class="rev-card">
+        <div class="rev-card-title">💳 入金准备</div>
+        <div class="rev-card-item">1. 香港银行卡</div>
+        <div class="rev-card-item">2. 入金10,000港元或等值货币激活账户</div>
+      </div>
+      <div style="padding:0 20px">
+        <button class="btn btn-p" style="width:100%;margin-top:8px" onclick="go('activate')">审核通过，去入金 →</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function screenActivate() {
+  return `<div class="screen active">
+    ${sb()} ${nb()}
+    <div style="flex:1;overflow-y:auto">
+      <div class="gauge-wrap">
+        ${gauge(95, '95')}
+        <div style="font-size:18px;font-weight:700;color:#1A1A1A;margin-top:10px">入金1万港元即可激活账户</div>
+        <div style="font-size:13px;color:#9A9A9A;margin-top:4px">还差一步就完成开户啦</div>
+      </div>
+
+      <!-- 两张并排入金选项卡片 -->
+      <div class="act-cards">
+        <div class="act-card act-card-gray">
+          <div class="act-card-title">入金1万港元或等值货币</div>
+          <div class="act-card-link">激活iARK HK账户</div>
+        </div>
+        <div class="act-card act-card-gold">
+          <div class="act-card-title">入金15万美元</div>
+          <div class="act-card-link">享受全球私行级<br>财富管理服务</div>
+          <div class="act-card-note">一个尊贵d配图</div>
+        </div>
+      </div>
+
+      <!-- 入金按钮 -->
+      <button class="act-in-btn">入金</button>
+
+      <!-- 开通专业投资者 -->
+      <div class="pro-banner" style="margin-top:24px">
+        <div>
+          <div class="pro-title">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M8 1l1.8 4.2H14l-3.4 2.6 1.3 4.2L8 9.5l-3.9 2.5 1.3-4.2L2 5.2h4.2z" fill="#C84B1A"/>
+            </svg>
+            开通专业投资者
+          </div>
+          <div class="pro-sub">解锁私募基金、结构性产品及更多<br>投资产品种类</div>
+        </div>
+        <button class="pro-btn">立即开通</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ─── OVERLAY SHEETS ──────────────────────────────────────
+function docSheet() {
+  const docs = S.country === '希腊'
+    ? ['希腊永久居留卡','希腊护照']
+    : S.country === '中国内地'
+    ? ['中国大陆居民身份证','中国护照']
+    : S.country === '中国香港'
+    ? ['香港永久居民身份证','香港非永久居民身份证']
+    : ['护照','永久居留卡'];
+  return `<div class="ov" onclick="S.sheet=null;render()">
+    <div class="bs" onclick="event.stopPropagation()">
+      <div class="bs-head">
+        开户证件
+        <div class="bs-close" onclick="S.sheet=null;render()">${ICO.x}</div>
+      </div>
+      ${docs.map(d=>`
+        <div class="bs-item" onclick="S.docType='${d}';S.sheet=null;render()">${d}</div>
+      `).join('')}
+    </div>
+  </div>`;
+}
+
+// ─── MAIN RENDER ─────────────────────────────────────────
+function render() {
+  const app = document.getElementById('app');
+  const screens = {
+    'landing': screenLanding,
+    'identity-select': screenIdentitySelect,
+    'identity-verify': screenIdentityVerify,
+    'country-picker': screenCountryPicker,
+    'camera': screenCamera,
+    'identity-form': screenIdentityForm,
+    'bank-info': screenBankInfo,
+    'personal-info': screenPersonalInfo,
+    'account-type': screenAccountType,
+    'address': screenAddress,
+    'financial': screenFinancial,
+    'invest-exp': screenInvestExp,
+    'tax-info': screenTaxInfo,
+    'other-info': screenOtherInfo,
+    'confirm-info': screenConfirmInfo,
+    'declaration': screenDeclaration,
+    'signature': screenSignature,
+    'review-90': screenReview90,
+    'activate': screenActivate,
+  };
+  const fn = screens[S.screen] || screenLanding;
+  app.innerHTML = fn();
+
+  // Init canvas if signature screen
+  if (S.screen === 'signature') initCanvas();
+}
+
+// ─── HELPERS ─────────────────────────────────────────────
+function filterC() {
+  const q = document.getElementById('cs').value.toLowerCase();
+  const list = document.getElementById('clist');
+  const filtered = q ? COUNTRIES.filter(c=>c.n.toLowerCase().includes(q)) : COUNTRIES;
+  list.innerHTML = `<div class="sec-title">常用地区</div>` +
+    filtered.map(c=>`<div class="country-item" onclick="selC('${c.n}')"><span style="font-size:22px">${c.f}</span><span>${c.n}</span></div>`).join('');
+}
+
+function selC(name) {
+  S.country = name;
+  S.docType = null;
+  back();
+}
+
+function takePhoto() {
+  S.photoTaken = true;
+  go('identity-verify', false);
+}
+
+function toggleMarg() {
+  const cb = document.getElementById('margcb');
+  if (cb) {
+    const on = cb.classList.toggle('on');
+    cb.innerHTML = on ? ICO.chk : '';
+  }
+}
+
+// ─── CANVAS DRAWING ──────────────────────────────────────
+let drawing = false, lx = 0, ly = 0, ctx = null;
+
+function initCanvas() {
+  const c = document.getElementById('sigCanvas');
+  if (!c) return;
+  const rect = c.getBoundingClientRect();
+  c.width = rect.width * window.devicePixelRatio || rect.width;
+  c.height = rect.height * window.devicePixelRatio || rect.height;
+  ctx = c.getContext('2d');
+  ctx.scale(window.devicePixelRatio || 1, window.devicePixelRatio || 1);
+  ctx.strokeStyle = '#1A1A1A';
+  ctx.lineWidth = 2.5;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  c.addEventListener('mousedown', sd);
+  c.addEventListener('mousemove', dm);
+  c.addEventListener('mouseup', ed);
+  c.addEventListener('mouseleave', ed);
+  c.addEventListener('touchstart', sd, {passive:false});
+  c.addEventListener('touchmove', dm, {passive:false});
+  c.addEventListener('touchend', ed);
+}
+
+function pos(e, c) {
+  const r = c.getBoundingClientRect();
+  const scale = 1; // already scaled in initCanvas
+  if (e.touches) return {x:(e.touches[0].clientX-r.left)*scale, y:(e.touches[0].clientY-r.top)*scale};
+  return {x:(e.clientX-r.left)*scale, y:(e.clientY-r.top)*scale};
+}
+
+function sd(e) {
+  e.preventDefault();
+  const c = document.getElementById('sigCanvas');
+  if (!ctx) { ctx = c.getContext('2d'); }
+  drawing = true;
+  const p = pos(e, c);
+  lx = p.x; ly = p.y;
+  ctx.beginPath(); ctx.moveTo(lx, ly);
+}
+function dm(e) {
+  e.preventDefault();
+  if (!drawing || !ctx) return;
+  const c = document.getElementById('sigCanvas');
+  const p = pos(e, c);
+  ctx.lineTo(p.x, p.y);
+  ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(p.x, p.y);
+  lx = p.x; ly = p.y;
+  if (!S.sigDrawn) {
+    S.sigDrawn = true;
+    const h = document.getElementById('sigHint');
+    if (h) h.style.display = 'none';
+  }
+}
+function ed() { drawing = false; }
+
+function clearSig() {
+  const c = document.getElementById('sigCanvas');
+  if (c && ctx) ctx.clearRect(0, 0, c.width, c.height);
+  S.sigDrawn = false;
+  const h = document.getElementById('sigHint');
+  if (h) h.style.display = 'flex';
+}
+
+// ─── BOOT ────────────────────────────────────────────────
+render();
+</script>
+</body>
+</html>

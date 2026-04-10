@@ -1,0 +1,19 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "portfolio-dashboard",
+      "runtimeExecutable": "/usr/local/bin/node",
+      "runtimeArgs": ["node_modules/.bin/vite"],
+      "cwd": "/Users/cjs6104/Documents/Private/AI/AIM2026/portfolio-dashboard",
+      "port": 3000
+    },
+    {
+      "name": "iark-demo",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "-l", "3001", "."],
+      "cwd": "/Users/cjs6104/Documents/Private/AI/AIM2026/iark-onboarding-demo",
+      "port": 3001
+    }
+  ]
+}
