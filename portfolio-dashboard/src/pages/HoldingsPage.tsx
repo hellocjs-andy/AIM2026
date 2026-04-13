@@ -29,6 +29,7 @@ import { Button } from '../components/ui/Button'
 import { Badge } from '../components/ui/Badge'
 import { Modal } from '../components/ui/Modal'
 import { Input } from '../components/ui/Input'
+import { Num } from '../components/ui/Num'
 
 // ── Cash Account Inline Edit Card ────────────────────────────────────────────
 function CashCard({
@@ -320,7 +321,9 @@ export default function HoldingsPage() {
           ].map(s => (
             <div key={s.label} className="bg-surface-2 border border-border rounded-lg px-4 py-3">
               <p className="text-xs text-gray-500 mb-1">{s.label}</p>
-              <p className={clsx('text-base font-semibold font-mono', s.color)}>{s.value}</p>
+              <p className={clsx('text-base font-semibold font-mono', s.color)}>
+            {s.label === '持仓数量' ? s.value : <Num>{s.value}</Num>}
+          </p>
             </div>
           ))}
         </div>
@@ -423,7 +426,7 @@ export default function HoldingsPage() {
                       {/* Value */}
                       <td className="px-3 py-3 text-right">
                         <span className="text-sm font-mono font-semibold text-gray-200">
-                          {fmtCNY(h.value, 0)}
+                          <Num>{fmtCNY(h.value, 0)}</Num>
                         </span>
                       </td>
                       {/* Position ratio */}
@@ -435,7 +438,7 @@ export default function HoldingsPage() {
                       {/* Today P&L */}
                       <td className="px-3 py-3 text-right">
                         <span className={clsx('text-sm font-mono', pnlColor(h.todayPnL))}>
-                          {fmtPnL(h.todayPnL, 0)}
+                          <Num>{fmtPnL(h.todayPnL, 0)}</Num>
                         </span>
                       </td>
                       {/* Today P&L rate */}
@@ -447,7 +450,7 @@ export default function HoldingsPage() {
                       {/* Holding P&L */}
                       <td className="px-3 py-3 text-right">
                         <span className={clsx('text-sm font-mono', pnlColor(h.holdingPnL))}>
-                          {fmtPnL(h.holdingPnL, 0)}
+                          <Num>{fmtPnL(h.holdingPnL, 0)}</Num>
                         </span>
                       </td>
                       {/* Holding P&L rate */}

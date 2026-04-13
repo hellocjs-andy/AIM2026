@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { PrivacyProvider } from './contexts/privacy'
 import Layout from './components/Layout'
 import DashboardPage from './pages/DashboardPage'
 import HoldingsPage from './pages/HoldingsPage'
@@ -21,6 +22,7 @@ const queryClient = new QueryClient({
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
+      <PrivacyProvider>
       <BrowserRouter basename="/AIM2026">
         <Routes>
           <Route path="/" element={<Layout />}>
@@ -34,6 +36,7 @@ export default function App() {
           </Route>
         </Routes>
       </BrowserRouter>
+      </PrivacyProvider>
     </QueryClientProvider>
   )
 }
