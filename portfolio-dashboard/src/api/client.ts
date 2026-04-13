@@ -66,6 +66,9 @@ export const holdingsApi = {
   updatePrice: (code: string, price: number) =>
     http.put<Holding>(`/holdings/${code}/price`, { price }).then(r => r.data),
 
+  updateType: (code: string, type: 'stock' | 'fund') =>
+    http.put<Holding>(`/holdings/${code}/type`, { type }).then(r => r.data),
+
   refreshPrices: () =>
     http.post<RefreshPricesResult>('/holdings/refresh').then(r => r.data),
 

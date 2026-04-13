@@ -12,6 +12,7 @@ import {
   Check,
   X,
   Wallet,
+  RefreshCcw,
 } from 'lucide-react'
 import { holdingsApi, settingsApi, type RefreshPricesResult } from '../api/client'
 import { Holding } from '../types'
@@ -256,6 +257,15 @@ export default function HoldingsPage() {
     },
   })
 
+  const updateType = useMutation({
+    mutationFn: ({ code, type }: { code: string; type: 'stock' | 'fund' }) =>
+      holdingsApi.updateType(code, type),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['holdings'] })
+      qc.invalidateQueries({ queryKey: ['dashboard-summary'] })
+    },
+  })
+
   const handleSort = (key: SortKey) => {
     if (key === sortKey) setSortDir(d => (d === 'asc' ? 'desc' : 'asc'))
     else { setSortKey(key); setSortDir('desc') }
@@ -417,11 +427,25 @@ export default function HoldingsPage() {
                           <p className="text-sm font-medium text-gray-200 whitespace-nowrap">{h.name}</p>
                         </div>
                       </td>
-                      {/* Type */}
+                      {/* Type — click to toggle */}
                       <td className="px-3 py-3">
-                        <Badge variant={h.type === 'stock' ? 'blue' : 'amber'}>
-                          {h.type === 'stock' ? '股票' : '基金'}
-                        </Badge>
+                        <button
+                          onClick={() => updateType.mutate({
+                            code: h.code,
+                            type: h.type === 'stock' ? 'fund' : 'stock',
+                          })}
+                          disabled={updateType.isPending}
+                          title="点击切换股票/基金类型"
+                          className="group flex items-center gap-1 disabled:opacity-50"
+                        >
+                          <Badge variant={h.type === 'stock' ? 'blue' : 'amber'}>
+                            {h.type === 'stock' ? '股票' : '基金'}
+                          </Badge>
+                          <RefreshCcw
+                            size={10}
+                            className="text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                          />
+                        </button>
                       </td>
                       {/* Value */}
                       <td className="px-3 py-3 text-right">

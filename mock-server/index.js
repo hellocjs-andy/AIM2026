@@ -476,6 +476,16 @@ const server = http.createServer(async (req, res) => {
     return json(res, holdings[idx])
   }
 
+  if (method === 'PUT' && /^\/api\/holdings\/[^/]+\/type$/.test(p)) {
+    const code = p.split('/')[3]
+    const body = await readBody(req)
+    if (!['stock', 'fund'].includes(body.type)) return json(res, { error: 'invalid type' }, 400)
+    const idx = holdings.findIndex(h => h.code === code)
+    if (idx === -1) return json(res, { error: 'not found' }, 404)
+    holdings[idx] = { ...holdings[idx], type: body.type, updatedAt: new Date().toISOString() }
+    return json(res, holdings[idx])
+  }
+
   if (method === 'POST' && p === '/api/holdings/refresh') {
     const result = await refreshAllPrices()
     return json(res, result)
