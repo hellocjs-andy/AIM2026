@@ -21,7 +21,7 @@ const queryClient = new QueryClient({
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
+      <BrowserRouter basename="/AIM2026">
         <Routes>
           <Route path="/" element={<Layout />}>
             <Route index element={<DashboardPage />} />
