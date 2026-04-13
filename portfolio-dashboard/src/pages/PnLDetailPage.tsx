@@ -1,11 +1,14 @@
 import { useParams, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
+import { useState } from 'react'
 import { ArrowLeft, TrendingUp, TrendingDown } from 'lucide-react'
 import { holdingsApi, closedApi } from '../api/client'
 import { Holding, ClosedPosition } from '../types'
-import { fmtPnL, fmtPct, fmtCNY, pnlColor, clsx } from '../lib/utils'
+import { fmtPnL, fmtPct, fmtCNY, pnlColor, clsx, detectAssetType } from '../lib/utils'
 import { Badge } from '../components/ui/Badge'
 import dayjs from 'dayjs'
+
+type TypeFilter = 'all' | 'stock' | 'fund'
 
 // ── 类型配置 ──────────────────────────────────────────────────────────────────
 type PnLType = 'today' | 'holding' | 'yearly' | 'total'
@@ -121,6 +124,8 @@ export default function PnLDetailPage() {
   const isYearly = type === 'yearly'
   const currentYear = dayjs().year()
 
+  const [typeFilter, setTypeFilter] = useState<TypeFilter>('all')
+
   const { data: holdings = [], isLoading } = useQuery({
     queryKey: ['holdings'],
     queryFn: holdingsApi.getAll,
@@ -136,9 +141,22 @@ export default function PnLDetailPage() {
     }),
     enabled: isYearly,
   })
-  const closedRows: ClosedPosition[] = closedPage?.items ?? []
+  const allClosedRows: ClosedPosition[] = closedPage?.items ?? []
 
-  const rows = holdings
+  const closedPnL = (c: ClosedPosition) => c.yearlyPnL !== undefined ? c.yearlyPnL : c.totalPnL
+
+  // Apply type filter to holdings and closed rows
+  const filteredHoldings = typeFilter === 'all'
+    ? holdings
+    : holdings.filter(h => h.type === typeFilter)
+
+  const closedRows: ClosedPosition[] = isYearly
+    ? (typeFilter === 'all'
+        ? allClosedRows
+        : allClosedRows.filter(c => detectAssetType(c.code) === typeFilter))
+    : []
+
+  const rows = filteredHoldings
     .map(h => ({
       holding: h,
       pnl:  (h[cfg.field]  as number) ?? 0,
@@ -148,7 +166,6 @@ export default function PnLDetailPage() {
     .sort((a, b) => b.pnl - a.pnl)
 
   const holdingTotal = rows.reduce((s, r) => s + r.pnl, 0)
-  const closedPnL    = (c: ClosedPosition) => c.yearlyPnL !== undefined ? c.yearlyPnL : c.totalPnL
   const closedTotal  = isYearly ? closedRows.reduce((s, c) => s + closedPnL(c), 0) : 0
   const total        = holdingTotal + closedTotal
   const maxAbs       = Math.max(...rows.map(r => Math.abs(r.pnl)), 1)
@@ -212,6 +229,21 @@ export default function PnLDetailPage() {
               )}
             </div>
           </div>
+        </div>
+
+        {/* Type filter tabs */}
+        <div className="flex items-center gap-2">
+          {(['all', 'stock', 'fund'] as const).map(t => (
+            <button
+              key={t}
+              onClick={() => setTypeFilter(t)}
+              className={clsx('px-3 py-1.5 rounded-lg text-xs font-medium transition-colors',
+                typeFilter === t ? 'bg-accent text-white' : 'bg-surface-2 border border-border text-gray-400 hover:text-gray-200'
+              )}
+            >
+              {t === 'all' ? '全部' : t === 'stock' ? '股票' : '基金'}
+            </button>
+          ))}
         </div>
 
         {/* Table */}

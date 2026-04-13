@@ -20,6 +20,15 @@ function normCode(c) {
   return String(c || '').replace(/\.0$/, '').padStart(6, '0')
 }
 
+function detectType(code) {
+  const c = String(code || '').padStart(6, '0')
+  const ETF_PFX = ['159','510','511','512','513','515','516','517','518']
+  const EXCHANGE = ['300','600','601','603','605','688','002','000','001','003']
+  if (ETF_PFX.some(p => c.startsWith(p))) return 'fund'
+  if (EXCHANGE.some(p => c.startsWith(p))) return 'stock'
+  return 'fund'
+}
+
 /**
  * 自动计算今年盈亏（用于新增跨年清仓记录）
  *
@@ -111,6 +120,31 @@ function calcSummary() {
   const total = (now.getFullYear() % 4 === 0 && (now.getFullYear() % 100 !== 0 || now.getFullYear() % 400 === 0)) ? 366 : 365
   const expectedReturnRate = yearTargetRate * (doy / total)
 
+  const stockTodayPnL = stocks.reduce((s, h) => s + (h.todayPnL || 0), 0)
+  const fundTodayPnL  = funds.reduce((s, h) => s + (h.todayPnL || 0), 0)
+  const stockTodayPnLRate = (stockValue - stockTodayPnL) > 0 ? stockTodayPnL / (stockValue - stockTodayPnL) : 0
+  const fundTodayPnLRate  = (fundValue - fundTodayPnL) > 0 ? fundTodayPnL / (fundValue - fundTodayPnL) : 0
+
+  const stockHoldingPnL = stocks.reduce((s, h) => s + (h.holdingPnL || 0), 0)
+  const fundHoldingPnL  = funds.reduce((s, h) => s + (h.holdingPnL || 0), 0)
+  const stockTotalPnL   = stocks.reduce((s, h) => s + (h.totalPnL || 0), 0)
+  const fundTotalPnL    = funds.reduce((s, h) => s + (h.totalPnL || 0), 0)
+
+  const stockYearPnL = stocks.reduce((s, h) => s + (h.yearlyPnL || 0), 0)
+    + closed.filter(c => (c.closeDate||'').startsWith(yearStr) && detectType(c.code) === 'stock')
+            .reduce((s, c) => s + (c.yearlyPnL !== undefined ? c.yearlyPnL : c.totalPnL), 0)
+  const fundYearPnL = funds.reduce((s, h) => s + (h.yearlyPnL || 0), 0)
+    + closed.filter(c => (c.closeDate||'').startsWith(yearStr) && detectType(c.code) === 'fund')
+            .reduce((s, c) => s + (c.yearlyPnL !== undefined ? c.yearlyPnL : c.totalPnL), 0)
+
+  const stockTotalValue = stockValue + stockCash
+  const fundTotalValue  = fundValue + fundCash
+  const stockPositionRatio = stockTotalValue > 0 ? stockValue / stockTotalValue : 0
+  const fundPositionRatio  = fundTotalValue > 0 ? fundValue / fundTotalValue : 0
+  const totalPositionRatio = (stockTotalValue + fundTotalValue) > 0 ? (stockValue + fundValue) / (stockTotalValue + fundTotalValue) : 0
+  const stockRatioOfTotal  = (stockTotalValue + fundTotalValue) > 0 ? stockTotalValue / (stockTotalValue + fundTotalValue) : 0
+  const fundRatioOfTotal   = (stockTotalValue + fundTotalValue) > 0 ? fundTotalValue / (stockTotalValue + fundTotalValue) : 0
+
   return {
     totalValue, investValue, stockValue, fundValue,
     stockCash, fundCash,
@@ -127,6 +161,13 @@ function calcSummary() {
     dayOfYear:           doy,
     totalDaysInYear:     total,
     expectedReturnRate,
+    stockTodayPnL, fundTodayPnL, stockTodayPnLRate, fundTodayPnLRate,
+    stockHoldingPnL, fundHoldingPnL,
+    stockTotalPnL, fundTotalPnL,
+    stockYearPnL, fundYearPnL,
+    stockTotalValue, fundTotalValue,
+    stockPositionRatio, fundPositionRatio, totalPositionRatio,
+    stockRatioOfTotal, fundRatioOfTotal,
     updatedAt: now.toISOString(),
   }
 }

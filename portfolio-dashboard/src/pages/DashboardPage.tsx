@@ -32,34 +32,59 @@ import { useQueryClient, useMutation } from '@tanstack/react-query'
 import { useState } from 'react'
 import dayjs from 'dayjs'
 
-// ── Stat Card ─────────────────────────────────────────────────────────────────
-function StatCard({
+// ── PnL Card ──────────────────────────────────────────────────────────────────
+interface BreakdownItem {
+  label: string
+  amount: number
+  rate?: number
+}
+
+function PnLCard({
   title,
   value,
-  sub,
-  subColor,
+  rate,
+  breakdown,
   icon: Icon,
   iconColor,
   to,
 }: {
   title: string
   value: string
-  sub?: string
-  subColor?: string
+  rate: string | null
+  breakdown?: BreakdownItem[] | null
   icon: React.ElementType
   iconColor: string
   to?: string
 }) {
   const inner = (
-    <div className="flex items-start justify-between">
-      <div className="space-y-1.5">
-        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">{title}</p>
-        <p className="text-xl sm:text-2xl font-bold text-gray-100 font-mono"><Num>{value}</Num></p>
-        {sub && <p className={clsx('text-sm font-medium', subColor ?? 'text-gray-400')}>{sub}</p>}
+    <div className="space-y-2">
+      <div className="flex items-start justify-between">
+        <div className="space-y-1.5">
+          <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">{title}</p>
+          <p className="text-xl sm:text-2xl font-bold text-gray-100 font-mono"><Num>{value}</Num></p>
+          {rate != null && <p className={clsx('text-sm font-medium', 'text-gray-400')}>{rate}</p>}
+        </div>
+        <div className={clsx('w-10 h-10 rounded-lg flex items-center justify-center', iconColor)}>
+          <Icon size={20} className="opacity-90" />
+        </div>
       </div>
-      <div className={clsx('w-10 h-10 rounded-lg flex items-center justify-center', iconColor)}>
-        <Icon size={20} className="opacity-90" />
-      </div>
+      {breakdown && breakdown.length > 0 && (
+        <div className="flex gap-3 pt-1.5 border-t border-white/8">
+          {breakdown.map(b => (
+            <div key={b.label} className="flex-1">
+              <p className="text-[10px] text-gray-600">{b.label}</p>
+              <p className={clsx('text-xs font-mono font-semibold', pnlColor(b.amount))}>
+                <Num>{fmtPnL(b.amount, 0)}</Num>
+              </p>
+              {b.rate != null && (
+                <p className={clsx('text-[10px] font-mono', pnlColor(b.rate))}>
+                  {fmtPct(b.rate)}
+                </p>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
   if (to) {
@@ -224,6 +249,13 @@ function AllocationCard({
   totalValue,
   stockCount,
   fundCount,
+  stockTotalValue,
+  fundTotalValue,
+  stockPositionRatio,
+  fundPositionRatio,
+  totalPositionRatio,
+  stockRatioOfTotal,
+  fundRatioOfTotal,
 }: {
   stockValue: number
   fundValue: number
@@ -232,6 +264,13 @@ function AllocationCard({
   totalValue: number
   stockCount: number
   fundCount: number
+  stockTotalValue: number
+  fundTotalValue: number
+  stockPositionRatio: number
+  fundPositionRatio: number
+  totalPositionRatio: number
+  stockRatioOfTotal: number
+  fundRatioOfTotal: number
 }) {
   const data = [
     { name: '股票(含场内ETF)', value: stockValue, sub: `${stockCount}只` },
@@ -296,6 +335,43 @@ function AllocationCard({
               </p>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* Position analysis */}
+      <div className="border-t border-border pt-3 space-y-2">
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">仓位分析</p>
+        {/* Stock/Fund total asset ratio */}
+        <div className="grid grid-cols-2 gap-2">
+          <div className="bg-surface-3 rounded-lg px-3 py-2">
+            <p className="text-[10px] text-gray-500 mb-0.5">股票总资产</p>
+            <p className="text-xs font-mono font-semibold text-blue-400">
+              <Num>{fmtCNYCompact(stockTotalValue)}</Num>
+            </p>
+            <p className="text-[10px] font-mono text-gray-500">{(stockRatioOfTotal * 100).toFixed(1)}% of 总</p>
+          </div>
+          <div className="bg-surface-3 rounded-lg px-3 py-2">
+            <p className="text-[10px] text-gray-500 mb-0.5">基金总资产</p>
+            <p className="text-xs font-mono font-semibold text-amber-400">
+              <Num>{fmtCNYCompact(fundTotalValue)}</Num>
+            </p>
+            <p className="text-[10px] font-mono text-gray-500">{(fundRatioOfTotal * 100).toFixed(1)}% of 总</p>
+          </div>
+        </div>
+        {/* Position ratios */}
+        <div className="grid grid-cols-3 gap-2">
+          <div className="bg-surface-3 rounded-lg px-3 py-2">
+            <p className="text-[10px] text-gray-500 mb-0.5">股票仓位</p>
+            <p className="text-xs font-mono font-semibold text-gray-200">{(stockPositionRatio * 100).toFixed(1)}%</p>
+          </div>
+          <div className="bg-surface-3 rounded-lg px-3 py-2">
+            <p className="text-[10px] text-gray-500 mb-0.5">基金仓位</p>
+            <p className="text-xs font-mono font-semibold text-gray-200">{(fundPositionRatio * 100).toFixed(1)}%</p>
+          </div>
+          <div className="bg-surface-3 rounded-lg px-3 py-2">
+            <p className="text-[10px] text-gray-500 mb-0.5">总仓位</p>
+            <p className="text-xs font-mono font-semibold text-gray-200">{(totalPositionRatio * 100).toFixed(1)}%</p>
+          </div>
         </div>
       </div>
     </div>
@@ -455,41 +531,64 @@ export default function DashboardPage() {
               <span className="text-gray-500 text-sm ml-1">今日</span>
             </div>
           </div>
+          <div className="flex gap-6 mt-3 pt-3 border-t border-white/10">
+            <div>
+              <p className="text-xs text-gray-500">股票总资产</p>
+              <p className="text-sm font-bold font-mono text-blue-400"><Num>{fmtCNY(summary.stockTotalValue, 0)}</Num></p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500">基金总资产</p>
+              <p className="text-sm font-bold font-mono text-amber-400"><Num>{fmtCNY(summary.fundTotalValue, 0)}</Num></p>
+            </div>
+          </div>
         </div>
 
-        {/* 4 stat cards — 可点击进入盈亏明细 */}
+        {/* 4 PnL cards — 可点击进入盈亏明细 */}
         <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
-          <StatCard
-            title="今日盈亏"
+          <PnLCard
+            title={`今日盈亏 · ${dayjs().format('M月D日')}`}
             value={fmtPnL(summary.todayPnL)}
-            sub={fmtPct(summary.todayPnLRate)}
-            subColor={pnlColor(summary.todayPnL)}
+            rate={fmtPct(summary.todayPnLRate)}
+            breakdown={[
+              { label: '股票', amount: summary.stockTodayPnL, rate: summary.stockTodayPnLRate },
+              { label: '基金', amount: summary.fundTodayPnL,  rate: summary.fundTodayPnLRate  },
+            ]}
             icon={summary.todayPnL >= 0 ? TrendingUp : TrendingDown}
             iconColor={summary.todayPnL >= 0 ? 'bg-profit/15 text-profit' : 'bg-loss/15 text-loss'}
             to="/pnl/today"
           />
-          <StatCard
+          <PnLCard
             title="持有盈亏"
             value={fmtPnL(summary.holdingPnL)}
-            sub={fmtPct(summary.holdingPnLRate)}
-            subColor={pnlColor(summary.holdingPnL)}
+            rate={null}
+            breakdown={[
+              { label: '股票', amount: summary.stockHoldingPnL },
+              { label: '基金', amount: summary.fundHoldingPnL  },
+            ]}
             icon={summary.holdingPnL >= 0 ? TrendingUp : TrendingDown}
             iconColor={summary.holdingPnL >= 0 ? 'bg-profit/15 text-profit' : 'bg-loss/15 text-loss'}
             to="/pnl/holding"
           />
-          <StatCard
+          <PnLCard
             title="今年盈亏"
             value={fmtPnL(summary.yearPnL)}
-            sub={fmtPct(summary.yearReturnRate)}
-            subColor={pnlColor(summary.yearPnL)}
+            rate={fmtPct(summary.yearReturnRate)}
+            breakdown={[
+              { label: '股票', amount: summary.stockYearPnL },
+              { label: '基金', amount: summary.fundYearPnL  },
+            ]}
             icon={Target}
             iconColor="bg-amber-500/15 text-amber-400"
             to="/pnl/yearly"
           />
-          <StatCard
+          <PnLCard
             title="累计盈亏"
             value={fmtPnL(summary.totalPnL)}
-            sub="成立以来"
+            rate={null}
+            breakdown={[
+              { label: '股票', amount: summary.stockTotalPnL },
+              { label: '基金', amount: summary.fundTotalPnL  },
+            ]}
             icon={Calendar}
             iconColor="bg-purple-500/15 text-purple-400"
             to="/pnl/total"
@@ -506,6 +605,13 @@ export default function DashboardPage() {
             totalValue={summary.totalValue}
             stockCount={summary.stockCount}
             fundCount={summary.fundCount}
+            stockTotalValue={summary.stockTotalValue}
+            fundTotalValue={summary.fundTotalValue}
+            stockPositionRatio={summary.stockPositionRatio}
+            fundPositionRatio={summary.fundPositionRatio}
+            totalPositionRatio={summary.totalPositionRatio}
+            stockRatioOfTotal={summary.stockRatioOfTotal}
+            fundRatioOfTotal={summary.fundRatioOfTotal}
           />
           <YearTargetCard
             yearReturnRate={summary.yearReturnRate}

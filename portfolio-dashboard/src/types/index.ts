@@ -95,6 +95,24 @@ export interface DashboardSummary {
   totalDaysInYear: number       // 全年天数
   expectedReturnRate: number    // 按时间进度应达收益率
   updatedAt: string             // 最后更新时间
+  // ── Stock / Fund breakdown ──────────────────────────────────────────────────
+  stockTotalValue: number       // 股票总资产 = stockValue + stockCash
+  fundTotalValue: number        // 基金总资产 = fundValue + fundCash
+  stockTodayPnL: number
+  fundTodayPnL: number
+  stockTodayPnLRate: number
+  fundTodayPnLRate: number
+  stockHoldingPnL: number
+  fundHoldingPnL: number
+  stockTotalPnL: number
+  fundTotalPnL: number
+  stockYearPnL: number
+  fundYearPnL: number
+  stockPositionRatio: number    // 股票仓位 = stockValue/stockTotalValue
+  fundPositionRatio: number     // 基金仓位 = fundValue/fundTotalValue
+  totalPositionRatio: number    // 总仓位 = (stockValue+fundValue)/(stockTotal+fundTotal)
+  stockRatioOfTotal: number     // 股票总资产占(股票+基金)总资产比例
+  fundRatioOfTotal: number      // 基金总资产占比
 }
 
 // ── Pagination ────────────────────────────────────────────────────────────────
