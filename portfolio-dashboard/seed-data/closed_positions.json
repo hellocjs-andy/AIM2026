@@ -1754,5 +1754,37 @@
     "buyAvg": 2.8815,
     "sellAvg": 3.0372,
     "holdingDays": 187
+  },
+  {
+    "id": 109,
+    "closeDate": "2026-04-10",
+    "code": "159783",
+    "name": "双创基金",
+    "totalPnL": 1893.73,
+    "pnlRate": 0.0199,
+    "marketPnL": -0.043,
+    "outperform": 0.0629,
+    "buyAvg": 0.95,
+    "sellAvg": 0.969,
+    "daysAgo": 3,
+    "holdingDays": 57,
+    "tradeFee": 36.27,
+    "buildDate": "2026-01-13"
+  },
+  {
+    "id": 110,
+    "closeDate": "2026-04-10",
+    "code": "688525",
+    "name": "佰维存储",
+    "totalPnL": 1778.67,
+    "pnlRate": 0.0385,
+    "marketPnL": 0.025,
+    "outperform": 0.0135,
+    "buyAvg": 230.94,
+    "sellAvg": 239.84,
+    "daysAgo": 3,
+    "holdingDays": 10,
+    "tradeFee": 41.33,
+    "buildDate": "2026-03-27"
   }
 ]
