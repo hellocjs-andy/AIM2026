@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Save, RefreshCw, Settings, Target, Calendar, CheckCircle, AlertCircle, Wallet } from 'lucide-react'
+import { Save, RefreshCw, Settings, Target, Calendar, CheckCircle, AlertCircle, Wallet, Clock, LogOut } from 'lucide-react'
 import { settingsApi } from '../api/client'
-import { fmtCNY, fmtPct } from '../lib/utils'
+import { fmtCNY, fmtPct, clsx } from '../lib/utils'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
+import { useAuth, SESSION_OPTIONS } from '../contexts/auth'
 
 export default function SettingsPage() {
   const qc = useQueryClient()
+  const { sessionMinutes, setSessionMinutes, logout } = useAuth()
   const [form, setForm] = useState({ year_target_rate: '', year_start_value: '', stock_cash: '', fund_cash: '' })
   const [saved, setSaved] = useState(false)
 
@@ -169,6 +171,39 @@ export default function SettingsPage() {
           </Button>
         </div>
 
+        {/* Session Duration */}
+        <div className="bg-surface-2 border border-border rounded-xl p-5 space-y-4">
+          <div className="flex items-center gap-2">
+            <Clock size={16} className="text-accent" />
+            <h2 className="text-sm font-semibold text-gray-200">登录会话时长</h2>
+          </div>
+          <p className="text-xs text-gray-500 -mt-2">
+            设置登录状态的保持时间，超时后需重新登录。修改后立即生效（从现在起重新计时）。
+          </p>
+          <div className="grid grid-cols-3 gap-2">
+            {SESSION_OPTIONS.map(opt => (
+              <button
+                key={opt.minutes}
+                onClick={() => setSessionMinutes(opt.minutes)}
+                className={clsx(
+                  'py-2 px-3 rounded-lg text-sm font-medium border transition-colors text-center',
+                  sessionMinutes === opt.minutes
+                    ? 'bg-accent border-accent text-white'
+                    : 'bg-surface-3 border-border text-gray-400 hover:text-gray-200 hover:border-gray-500',
+                )}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+          <p className="text-xs text-gray-600">
+            当前设置：
+            <span className="text-gray-400 font-medium">
+              {SESSION_OPTIONS.find(o => o.minutes === sessionMinutes)?.label ?? '30 分钟'}
+            </span>
+          </p>
+        </div>
+
         {/* Info section */}
         <div className="bg-surface-2 border border-border rounded-xl p-5 space-y-3">
           <div className="flex items-center gap-2">
@@ -187,6 +222,13 @@ export default function SettingsPage() {
               </span>
             </div>
           </div>
+        </div>
+
+        {/* Logout */}
+        <div className="flex justify-end pt-2 pb-8">
+          <Button variant="outline" size="sm" icon={<LogOut size={14} />} onClick={logout}>
+            退出登录
+          </Button>
         </div>
       </div>
     </div>

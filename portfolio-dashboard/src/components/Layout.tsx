@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import { clsx } from '../lib/utils'
 import { usePrivacy } from '../contexts/privacy'
+import { useAuth } from '../contexts/auth'
 
 const NAV_ITEMS = [
   { to: '/', icon: LayoutDashboard, label: '概览', end: true },
@@ -25,6 +26,7 @@ const NAV_ITEMS = [
 
 export default function Layout() {
   const { hidden, toggle } = usePrivacy()
+  const { logout } = useAuth()
   return (
     <div className="flex h-screen bg-surface-1 text-gray-100 overflow-hidden">
       {/* Sidebar — desktop only */}
@@ -74,7 +76,7 @@ export default function Layout() {
         </nav>
 
         {/* Footer */}
-        <div className="p-4 border-t border-border">
+        <div className="p-4 border-t border-border space-y-3">
           <div className="text-xs text-gray-500 space-y-1">
             <div className="flex items-center gap-1.5">
               <RefreshCw size={11} />
@@ -82,6 +84,13 @@ export default function Layout() {
             </div>
             <div className="text-gray-600">AIM Portfolio v1.0</div>
           </div>
+          <button
+            onClick={logout}
+            className="flex items-center gap-1.5 text-xs text-gray-600 hover:text-gray-300 transition-colors"
+          >
+            <ChevronRight size={11} className="rotate-180" />
+            退出登录
+          </button>
         </div>
       </aside>
 
