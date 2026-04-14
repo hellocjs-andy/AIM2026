@@ -778,17 +778,44 @@ const server = http.createServer(async (req, res) => {
       .filter(r => r.date < yearStr + '-01-01')
       .sort((a, b) => b.date.localeCompare(a.date))[0]
 
+    // For current month: inject live data from calcSummary() so it's always up-to-date
+    const nowMonth = new Date().getMonth() + 1
+    const nowYear  = new Date().getFullYear()
+    if (year === nowYear) {
+      const live = calcSummary()
+      const todayStr = new Date().toISOString().slice(0, 10)
+      const liveSnap = {
+        date: todayStr,
+        totalValue:      live.totalValue,
+        ytdPnL:          live.yearPnL,
+        stockYtdPnL:     live.stockYearPnL,
+        fundYtdPnL:      live.fundYearPnL,
+      }
+      // Replace last entry of current month with live snap (or add it)
+      if (!byMonth[nowMonth]) byMonth[nowMonth] = []
+      const curDays = byMonth[nowMonth]
+      if (curDays.length && curDays[curDays.length - 1].date === todayStr) {
+        curDays[curDays.length - 1] = liveSnap
+      } else {
+        // Only override if live snap is more recent
+        const lastSnap = curDays[curDays.length - 1]
+        if (!lastSnap || liveSnap.date > lastSnap.date) {
+          curDays.push(liveSnap)
+        } else {
+          curDays[curDays.length - 1] = liveSnap
+        }
+      }
+    }
+
     const months = Object.keys(byMonth).map(Number).sort((a, b) => a - b)
-    const result = months.map((m, idx) => {
+    const result = months.map((m) => {
       const days = byMonth[m]
       const lastDay  = days[days.length - 1]
-      // Previous month's last day (or prev year last)
       let prevLastDay = null
       if (m === 1) {
         prevLastDay = prevYearLast || null
       } else {
-        const prevMonth = m - 1
-        const prevDays  = byMonth[prevMonth]
+        const prevDays = byMonth[m - 1]
         if (prevDays && prevDays.length) prevLastDay = prevDays[prevDays.length - 1]
       }
       const prevYtdPnL      = prevLastDay ? prevLastDay.ytdPnL       : 0
@@ -822,50 +849,63 @@ const server = http.createServer(async (req, res) => {
     return json(res, list)
   }
 
-  // Benchmarks — refresh today's prices from Tencent
+  // Benchmarks — refresh full history from EastMoney kline API
   if (method === 'POST' && p === '/api/benchmarks/refresh') {
-    const INDICES = {
-      sh000001: 'sh000001',
-      cy399006: 'sz399006',
-      kc000680: 'sh000680',
-      hs000300: 'sh000300',
+    // EastMoney secid mapping
+    const EM_SECIDS = {
+      sh000001: '1.000001',
+      cy399006: '0.399006',
+      kc000680: '1.000680',
+      hs000300: '1.000300',
     }
+    const todayStr = new Date().toISOString().slice(0, 10).replace(/-/g, '')
     try {
-      const symbols = Object.values(INDICES).join(',')
-      const url = 'http://qt.gtimg.cn/q=' + symbols
-      const resp = await fetch(url, {
-        headers: {
-          'Referer':    'https://finance.qq.com/',
-          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
-        },
-      })
-      if (!resp.ok) throw new Error('tencent ' + resp.status)
-      const buf  = Buffer.from(await resp.arrayBuffer())
-      const text = buf.toString('latin1')
-      const lines = text.split(/;\s*/).filter(Boolean)
-      const priceMap = {}
-      for (const line of lines) {
-        const m = line.match(/v_([a-z]{2})(\d{6})="([^"]*)"/)
-        if (!m) continue
-        const sym   = m[1] + m[2]
-        const parts = m[3].split('~')
-        const close = parseFloat(parts[3])
-        const prev  = parseFloat(parts[4])
-        if (!isFinite(close) || close <= 0) continue
-        const changeRate = prev > 0 ? Math.round(((close - prev) / prev) * 1e6) / 1e6 : 0
-        priceMap[sym] = { close, changeRate }
+      // Fetch all 4 indices in parallel
+      const results = await Promise.all(
+        Object.entries(EM_SECIDS).map(async ([key, secid]) => {
+          const url = `https://push2his.eastmoney.com/api/qt/stock/kline/get?secid=${secid}&klt=101&fqt=0&beg=20260101&end=${todayStr}&fields1=f1,f2,f3,f4,f5,f6&fields2=f51,f52,f53,f54,f55,f56,f57,f58,f59,f60,f61`
+          const resp = await fetch(url, {
+            headers: {
+              'Referer':    'https://finance.eastmoney.com/',
+              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+            },
+          })
+          if (!resp.ok) throw new Error(`eastmoney ${key} ${resp.status}`)
+          const data = await resp.json()
+          const klines = data?.data?.klines ?? []
+          // Each kline: "YYYY-MM-DD,open,close,high,low,vol,amount,amplitude,changeRate,changeAmount,turnover"
+          const dayMap = {}
+          for (const kline of klines) {
+            const parts = kline.split(',')
+            const date  = parts[0]  // YYYY-MM-DD
+            const close = parseFloat(parts[2])
+            const prev  = close - parseFloat(parts[9])  // close - changeAmount = prev close
+            if (!isFinite(close) || close <= 0) continue
+            const changeRate = prev > 0 ? Math.round(((close - prev) / prev) * 1e6) / 1e6 : parseFloat(parts[8]) / 100
+            dayMap[date] = { close: Math.round(close * 100) / 100, changeRate }
+          }
+          return { key, dayMap }
+        })
+      )
+
+      // Rebuild benchmarkPrices: merge all index data by date
+      const merged = {}
+      for (const { key, dayMap } of results) {
+        for (const [date, val] of Object.entries(dayMap)) {
+          if (!merged[date]) merged[date] = { date }
+          merged[date][key] = val
+        }
       }
-      const todayStr = new Date().toISOString().slice(0, 10)
-      // Map tencent symbols back to our keys
-      const entry = { date: todayStr }
-      const symToKey = { 'sh000001': 'sh000001', 'sz399006': 'cy399006', 'sh000680': 'kc000680', 'sh000300': 'hs000300' }
-      for (const [sym, key] of Object.entries(symToKey)) {
-        if (priceMap[sym]) entry[key] = priceMap[sym]
+      // Replace in-memory store (keep only entries that have at least one index)
+      benchmarkPrices.length = 0
+      for (const entry of Object.values(merged)) {
+        benchmarkPrices.push(entry)
       }
-      const idx = benchmarkPrices.findIndex(r => r.date === todayStr)
-      if (idx >= 0) benchmarkPrices[idx] = entry
-      else benchmarkPrices.push(entry)
-      return json(res, { updated: 4, date: todayStr })
+      benchmarkPrices.sort((a, b) => a.date.localeCompare(b.date))
+
+      const days = benchmarkPrices.length
+      console.log(`[benchmarks/refresh] loaded ${days} days from EastMoney`)
+      return json(res, { updated: 4, days })
     } catch(e) {
       console.error('[benchmarks/refresh] failed:', e.message)
       return json(res, { error: e.message }, 500)

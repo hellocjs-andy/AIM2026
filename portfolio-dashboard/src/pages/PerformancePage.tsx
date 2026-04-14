@@ -229,7 +229,16 @@ function DailyHeatmap({ snapshots, benchmarks, typeFilter, benchmarkEnabled }: H
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-6">
+      {/* Detail card — shown above heatmap when a day is selected */}
+      {selectedSnap && (
+        <DayDetailCard
+          snap={selectedSnap}
+          benchmarks={selectedBench}
+          benchmarkEnabled={benchmarkEnabled}
+        />
+      )}
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {months.map(({ monthKey, monthLabel, weeks }) => (
           <div key={monthKey}>
             <div className="text-sm font-medium text-gray-400 mb-2">{monthLabel}</div>
@@ -286,15 +295,6 @@ function DailyHeatmap({ snapshots, benchmarks, typeFilter, benchmarkEnabled }: H
           </div>
         ))}
       </div>
-
-      {/* Detail card */}
-      {selectedSnap && (
-        <DayDetailCard
-          snap={selectedSnap}
-          benchmarks={selectedBench}
-          benchmarkEnabled={benchmarkEnabled}
-        />
-      )}
     </div>
   )
 }
