@@ -97,7 +97,7 @@ function BarRow({
       {/* Amount + rate */}
       <div className="w-24 sm:w-28 text-right flex-shrink-0">
         <p className={clsx('text-sm font-mono font-semibold', pnlColor(pnl))}>
-          {fmtPnL(pnl, 0)}
+          {fmtPnL(pnl)}
         </p>
         {rate != null && (
           <p className={clsx('text-xs font-mono', pnlColor(rate))}>
@@ -206,24 +206,24 @@ export default function PnLDetailPage() {
           <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">{cfg.label}合计</p>
           <div className="flex items-end gap-6 flex-wrap">
             <span className={clsx('text-3xl sm:text-4xl font-bold font-mono', pnlColor(total))}>
-              {fmtPnL(total, 0)}
+              {fmtPnL(total)}
             </span>
             <div className="flex flex-col gap-1 pb-1 text-sm">
               <div className="flex gap-5">
                 <span className="text-profit flex items-center gap-1">
                   <TrendingUp size={14} />
-                  盈利 {profit.length} 只  {fmtCNY(grossProfit, 0)}
+                  盈利 {profit.length} 只  {fmtCNY(grossProfit)}
                 </span>
                 <span className="text-loss flex items-center gap-1">
                   <TrendingDown size={14} />
-                  亏损 {loss.length} 只  {fmtCNY(-grossLoss, 0)}
+                  亏损 {loss.length} 只  {fmtCNY(-grossLoss)}
                 </span>
               </div>
               {isYearly && closedRows.length > 0 && (
                 <div className="text-xs text-gray-400">
                   含今年已清仓 {closedRows.length} 笔：
                   <span className={clsx('font-mono ml-1', pnlColor(closedTotal))}>
-                    {fmtPnL(closedTotal, 0)}
+                    {fmtPnL(closedTotal)}
                   </span>
                 </div>
               )}
@@ -266,13 +266,13 @@ export default function PnLDetailPage() {
                 {/* 盈利区 header + 股票/基金小计 */}
                 <div className="px-4 pt-3 pb-2 flex items-center gap-4">
                   <span className="text-xs font-semibold text-profit/80 uppercase tracking-wide">
-                    盈利 {profit.length} 只  {fmtPnL(grossProfit, 0)}
+                    盈利 {profit.length} 只  {fmtPnL(grossProfit)}
                   </span>
                   <span className="text-xs text-gray-500">
-                    股票 <span className={clsx('font-mono', pnlColor(stockProfit))}>{fmtPnL(stockProfit, 0)}</span>
+                    股票 <span className={clsx('font-mono', pnlColor(stockProfit))}>{fmtPnL(stockProfit)}</span>
                   </span>
                   <span className="text-xs text-gray-500">
-                    基金 <span className={clsx('font-mono', pnlColor(fundProfit))}>{fmtPnL(fundProfit, 0)}</span>
+                    基金 <span className={clsx('font-mono', pnlColor(fundProfit))}>{fmtPnL(fundProfit)}</span>
                   </span>
                 </div>
                 {profit.map((r, i) => (
@@ -298,10 +298,10 @@ export default function PnLDetailPage() {
                     亏损 {loss.length} 只  {fmtPnL(loss.reduce((s, r) => s + r.pnl, 0), 0)}
                   </span>
                   <span className="text-xs text-gray-500">
-                    股票 <span className={clsx('font-mono', pnlColor(stockLoss))}>{fmtPnL(stockLoss, 0)}</span>
+                    股票 <span className={clsx('font-mono', pnlColor(stockLoss))}>{fmtPnL(stockLoss)}</span>
                   </span>
                   <span className="text-xs text-gray-500">
-                    基金 <span className={clsx('font-mono', pnlColor(fundLoss))}>{fmtPnL(fundLoss, 0)}</span>
+                    基金 <span className={clsx('font-mono', pnlColor(fundLoss))}>{fmtPnL(fundLoss)}</span>
                   </span>
                 </div>
                 {[...loss].reverse().map((r, i) => (
@@ -330,7 +330,7 @@ export default function PnLDetailPage() {
                     今年已清仓 {closedRows.length} 笔
                   </span>
                   <span className={clsx('text-xs font-mono', pnlColor(closedTotal))}>
-                    合计 {fmtPnL(closedTotal, 0)}
+                    合计 {fmtPnL(closedTotal)}
                   </span>
                   {closedProfit.length > 0 && (
                     <span className="text-xs text-gray-500">
@@ -359,7 +359,7 @@ export default function PnLDetailPage() {
                         {fmtPnL(closedPnL(c), 0)}
                       </p>
                       <p className="text-xs font-mono text-gray-500">
-                        总{fmtPnL(c.totalPnL, 0)}
+                        总{fmtPnL(c.totalPnL)}
                       </p>
                     </div>
                     <div className="hidden sm:block w-14 text-right flex-shrink-0">

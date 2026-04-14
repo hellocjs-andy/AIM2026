@@ -20,8 +20,14 @@ function normCode(c) {
   return String(c || '').replace(/\.0$/, '').padStart(6, '0')
 }
 
+// 用户指定的特殊类型覆盖（场内ETF按股票账户 → stock；部分基金代码 → fund）
+const TYPE_OVERRIDES = {
+  '159915': 'stock', '513000': 'stock', '518850': 'stock', '515880': 'stock',
+  '000746': 'fund',  '001410': 'fund',
+}
 function detectType(code) {
   const c = String(code || '').padStart(6, '0')
+  if (TYPE_OVERRIDES[c]) return TYPE_OVERRIDES[c]
   const ETF_PFX = ['159','510','511','512','513','515','516','517','518']
   const EXCHANGE = ['300','600','601','603','605','688','002','000','001','003']
   if (ETF_PFX.some(p => c.startsWith(p))) return 'fund'

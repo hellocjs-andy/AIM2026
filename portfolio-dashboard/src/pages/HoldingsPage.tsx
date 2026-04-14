@@ -450,7 +450,7 @@ export default function HoldingsPage() {
                       {/* Value */}
                       <td className="px-3 py-3 text-right">
                         <span className="text-sm font-mono font-semibold text-gray-200">
-                          <Num>{fmtCNY(h.value, 0)}</Num>
+                          <Num>{fmtCNY(h.value)}</Num>
                         </span>
                       </td>
                       {/* Position ratio */}
@@ -462,7 +462,7 @@ export default function HoldingsPage() {
                       {/* Today P&L */}
                       <td className="px-3 py-3 text-right">
                         <span className={clsx('text-sm font-mono', pnlColor(h.todayPnL))}>
-                          <Num>{fmtPnL(h.todayPnL, 0)}</Num>
+                          <Num>{fmtPnL(h.todayPnL)}</Num>
                         </span>
                       </td>
                       {/* Today P&L rate */}
@@ -474,7 +474,7 @@ export default function HoldingsPage() {
                       {/* Holding P&L */}
                       <td className="px-3 py-3 text-right">
                         <span className={clsx('text-sm font-mono', pnlColor(h.holdingPnL))}>
-                          <Num>{fmtPnL(h.holdingPnL, 0)}</Num>
+                          <Num>{fmtPnL(h.holdingPnL)}</Num>
                         </span>
                       </td>
                       {/* Holding P&L rate */}

@@ -90,7 +90,7 @@ export default function SettingsPage() {
             <div className="bg-surface-3 rounded-lg p-3 self-end mb-1">
               <p className="text-xs text-gray-500 mb-1">对应目标盈利额</p>
               <p className="text-base font-bold font-mono text-accent">
-                {startValue > 0 ? fmtCNY(targetPnL, 0) : '—'}
+                {startValue > 0 ? fmtCNY(targetPnL) : '—'}
               </p>
             </div>
           </div>
@@ -109,7 +109,7 @@ export default function SettingsPage() {
             min="0"
             value={form.year_start_value}
             onChange={e => setForm(f => ({ ...f, year_start_value: e.target.value }))}
-            hint={`当前：${startValue > 0 ? fmtCNY(startValue, 0) : '未设置'} — 用于计算今年收益率和目标达成进度`}
+            hint={`当前：${startValue > 0 ? fmtCNY(startValue) : '未设置'} — 用于计算今年收益率和目标达成进度`}
           />
           <div className="bg-surface-3 rounded-lg px-4 py-3 text-xs text-gray-500 space-y-1">
             <p>· 建议设置为 <strong className="text-gray-300">上一年最后一个交易日</strong> 的总资产</p>

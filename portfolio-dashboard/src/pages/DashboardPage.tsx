@@ -74,7 +74,7 @@ function PnLCard({
             <div key={b.label} className="flex-1">
               <p className="text-[10px] text-gray-600">{b.label}</p>
               <p className={clsx('text-xs font-mono font-semibold', pnlColor(b.amount))}>
-                <Num>{fmtPnL(b.amount, 0)}</Num>
+                <Num>{fmtPnL(b.amount)}</Num>
               </p>
               {b.rate != null && (
                 <p className={clsx('text-[10px] font-mono', pnlColor(b.rate))}>
@@ -142,7 +142,7 @@ function YearTargetCard({
         <div className="bg-surface-3 rounded-lg p-3 space-y-1">
           <p className="text-xs text-gray-500">今年盈亏</p>
           <p className={clsx('text-sm font-bold font-mono', pnlColor(yearPnL))}>
-            <Num>{fmtPnL(yearPnL, 0)}</Num>
+            <Num>{fmtPnL(yearPnL)}</Num>
           </p>
           <p className={clsx('text-xs font-mono', pnlColor(yearReturnRate))}>
             {fmtPct(yearReturnRate)}
@@ -151,18 +151,18 @@ function YearTargetCard({
         <div className="bg-surface-3 rounded-lg p-3 space-y-1">
           <p className="text-xs text-gray-500">年度目标盈利</p>
           <p className="text-sm font-bold font-mono text-accent">
-            <Num>{fmtPnL(yearTargetPnL, 0)}</Num>
+            <Num>{fmtPnL(yearTargetPnL)}</Num>
           </p>
           <p className="text-xs text-gray-500">{fmtPct(yearTargetRate, 0)} 目标</p>
         </div>
         <div className="bg-surface-3 rounded-lg p-3 space-y-1">
           <p className="text-xs text-gray-500">距年度目标</p>
           <p className={clsx('text-sm font-bold font-mono', gapToFullTarget <= 0 ? 'text-profit' : 'text-loss')}>
-            {gapToFullTarget <= 0 ? '✓ 已达标' : <Num>-{fmtCNY(gapToFullTarget, 0)}</Num>}
+            {gapToFullTarget <= 0 ? '✓ 已达标' : <Num>-{fmtCNY(gapToFullTarget)}</Num>}
           </p>
           <p className="text-xs text-gray-500">
             {gapToFullTarget <= 0
-              ? <><Num>{`超出 ${fmtCNY(Math.abs(gapToFullTarget), 0)}`}</Num></>
+              ? <><Num>{`超出 ${fmtCNY(Math.abs(gapToFullTarget))}`}</Num></>
               : `还需盈利`}
           </p>
         </div>
@@ -182,7 +182,7 @@ function YearTargetCard({
         </div>
         <div className="flex items-center justify-between text-xs text-gray-500">
           <span>0</span>
-          <span className="text-accent">目标 {fmtPct(yearTargetRate, 0)}（<Num>{fmtCNY(yearTargetPnL, 0)}</Num>）</span>
+          <span className="text-accent">目标 {fmtPct(yearTargetRate, 0)}（<Num>{fmtCNY(yearTargetPnL)}</Num>）</span>
         </div>
       </div>
 
@@ -194,7 +194,7 @@ function YearTargetCard({
             {fmtPct(expectedReturnRate)}
           </p>
           <p className="text-xs text-gray-500">
-            ≈ <Num>{fmtCNY(expectedReturnRate * (yearTargetPnL / yearTargetRate), 0)}</Num>
+            ≈ <Num>{fmtCNY(expectedReturnRate * (yearTargetPnL / yearTargetRate))}</Num>
           </p>
         </div>
         <div className="bg-surface-3 rounded-lg p-3 space-y-1">
@@ -205,8 +205,8 @@ function YearTargetCard({
           </p>
           <p className={clsx('text-xs', isAhead ? 'text-profit' : 'text-amber-400')}>
             {isAhead
-              ? <><Num>{`超额 ${fmtCNY(Math.abs(yearGapAmount), 0)}`}</Num></>
-              : <><Num>{`缺口 -${fmtCNY(Math.abs(yearGapAmount), 0)}`}</Num></>}
+              ? <><Num>{`超额 ${fmtCNY(Math.abs(yearGapAmount))}`}</Num></>
+              : <><Num>{`缺口 -${fmtCNY(Math.abs(yearGapAmount))}`}</Num></>}
           </p>
         </div>
       </div>
@@ -518,7 +518,7 @@ export default function DashboardPage() {
           <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">总资产</p>
           <div className="flex flex-wrap items-end gap-4">
             <span className="text-3xl sm:text-4xl font-bold text-gray-100 font-mono">
-              <Num>{fmtCNY(summary.totalValue, 0)}</Num>
+              <Num>{fmtCNY(summary.totalValue)}</Num>
             </span>
             <div className={clsx('flex items-center gap-1.5 pb-1', pnlColor(summary.todayPnL))}>
               <TodayDir size={16} />
@@ -534,11 +534,13 @@ export default function DashboardPage() {
           <div className="flex gap-6 mt-3 pt-3 border-t border-white/10">
             <div>
               <p className="text-xs text-gray-500">股票总资产</p>
-              <p className="text-sm font-bold font-mono text-blue-400"><Num>{fmtCNY(summary.stockTotalValue, 0)}</Num></p>
+              <p className="text-sm font-bold font-mono text-blue-400"><Num>{fmtCNY(summary.stockTotalValue)}</Num></p>
+              <p className="text-[11px] font-mono text-blue-400/60">{(summary.stockRatioOfTotal * 100).toFixed(1)}%</p>
             </div>
             <div>
               <p className="text-xs text-gray-500">基金总资产</p>
-              <p className="text-sm font-bold font-mono text-amber-400"><Num>{fmtCNY(summary.fundTotalValue, 0)}</Num></p>
+              <p className="text-sm font-bold font-mono text-amber-400"><Num>{fmtCNY(summary.fundTotalValue)}</Num></p>
+              <p className="text-[11px] font-mono text-amber-400/60">{(summary.fundRatioOfTotal * 100).toFixed(1)}%</p>
             </div>
           </div>
         </div>

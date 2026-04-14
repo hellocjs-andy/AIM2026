@@ -118,7 +118,7 @@ function HoldingRow({
       <span className="font-mono text-xs text-gray-500 w-16 flex-shrink-0">{holding.code}</span>
       <span className="flex-1 text-sm text-gray-200 truncate min-w-0">{holding.name}</span>
       <span className="text-xs font-mono text-gray-500 w-12 text-right flex-shrink-0">{fmtPct(pct, 1)}</span>
-      <span className="text-sm font-mono text-gray-300 w-28 text-right flex-shrink-0">{fmtCNY(holding.value || 0, 0)}</span>
+      <span className="text-sm font-mono text-gray-300 w-28 text-right flex-shrink-0">{fmtCNY(holding.value || 0)}</span>
       <select
         value={cat}
         onChange={e => onCategoryChange(holding.code, e.target.value as AllocCategory)}
@@ -180,7 +180,7 @@ function AllocationSection({
           <Stat label="目标" value={fmtPct(targetPct, 0)} className="hidden sm:block" />
           <Stat label="实际" value={fmtPct(actualPct, 1)} valueClass={section.textColor} />
           <Stat label="偏差" value={(gap >= 0 ? '+' : '') + fmtPct(gap, 1)} valueClass={gapColor(gap)} />
-          <Stat label="市值" value={fmtCNY(totalSectionValue, 0)} className="hidden sm:block" />
+          <Stat label="市值" value={fmtCNY(totalSectionValue)} className="hidden sm:block" />
         </div>
         <span className="text-gray-500 flex-shrink-0">
           {expanded ? <ChevronDown size={15} /> : <ChevronRight size={15} />}
@@ -220,7 +220,7 @@ function AllocationSection({
                     <div className="w-1.5 h-1.5 rounded-sm" style={{ backgroundColor: sub.color }} />
                     <span className="text-xs font-medium text-gray-400">{sub.label}</span>
                     <span className="text-xs text-gray-600">
-                      目标 {fmtPct(targets[sub.targetKey] || 0, 0)} · 实际 {fmtPct(subPct, 1)} · 市值 {fmtCNY(subV, 0)}
+                      目标 {fmtPct(targets[sub.targetKey] || 0, 0)} · 实际 {fmtPct(subPct, 1)} · 市值 {fmtCNY(subV)}
                     </span>
                   </div>
                   {subH.length > 0
@@ -244,7 +244,7 @@ function AllocationSection({
               <Wallet size={13} className="text-amber-400 w-16 flex-shrink-0" />
               <span className="flex-1 text-sm text-gray-400">现金账户（股票 + 基金余额）</span>
               <span className="text-xs font-mono text-gray-500 w-12 text-right flex-shrink-0">{fmtPct(extraValue / totalAssets, 1)}</span>
-              <span className="text-sm font-mono text-amber-300 w-28 text-right flex-shrink-0">{fmtCNY(extraValue, 0)}</span>
+              <span className="text-sm font-mono text-amber-300 w-28 text-right flex-shrink-0">{fmtCNY(extraValue)}</span>
               <div className="w-28 flex-shrink-0" />
             </div>
           )}
@@ -421,7 +421,7 @@ export default function AllocationPage() {
         <div>
           <h1 className="text-lg font-bold text-gray-100">资产配置</h1>
           <p className="text-xs text-gray-500">
-            总资产 {fmtCNY(totalAssets, 0)} · {holdings.length} 个持仓
+            总资产 {fmtCNY(totalAssets)} · {holdings.length} 个持仓
           </p>
         </div>
         <Button size="sm" variant="secondary" icon={<Target size={14} />} onClick={() => setEditingTargets(true)}>
@@ -458,7 +458,7 @@ export default function AllocationPage() {
                 <div className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ backgroundColor: meta.color }} />
                 <span className="text-xs text-gray-400">{meta.label}</span>
                 <span className="text-xs font-mono text-gray-300">{(pct * 100).toFixed(1)}%</span>
-                <span className="text-xs text-gray-600">({fmtCNY(value, 0)})</span>
+                <span className="text-xs text-gray-600">({fmtCNY(value)})</span>
               </div>
             ))}
           </div>

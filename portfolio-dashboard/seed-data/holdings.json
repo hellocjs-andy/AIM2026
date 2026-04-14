@@ -2,7 +2,7 @@
   {
     "code": "159915",
     "name": "创业板",
-    "type": "fund",
+    "type": "stock",
     "value": 173400,
     "todayPnL": 1970,
     "todayPnLRate": 0.0096,
@@ -158,7 +158,7 @@
   {
     "code": "000746",
     "name": "招商行业精选股票基金",
-    "type": "stock",
+    "type": "fund",
     "value": 83950.17,
     "todayPnL": 26.09,
     "todayPnLRate": 0.0003,
@@ -184,7 +184,7 @@
   {
     "code": "513000",
     "name": "225ETF",
-    "type": "fund",
+    "type": "stock",
     "value": 77360,
     "todayPnL": -120,
     "todayPnLRate": -0.0015,
@@ -288,7 +288,7 @@
   {
     "code": "518850",
     "name": "黄金9999",
-    "type": "fund",
+    "type": "stock",
     "value": 45054,
     "todayPnL": -216,
     "todayPnLRate": -0.0048,
@@ -496,7 +496,7 @@
   {
     "code": "515880",
     "name": "通信ETF",
-    "type": "fund",
+    "type": "stock",
     "value": 24320,
     "todayPnL": -120,
     "todayPnLRate": -0.0049,
@@ -678,7 +678,7 @@
   {
     "code": "001410",
     "name": "信澳新能源产业股票A",
-    "type": "stock",
+    "type": "fund",
     "value": 7252.55,
     "todayPnL": 51.92,
     "todayPnLRate": 0.0072,

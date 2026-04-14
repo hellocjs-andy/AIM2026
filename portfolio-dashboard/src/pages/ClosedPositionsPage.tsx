@@ -92,7 +92,7 @@ export default function ClosedPositionsPage() {
           <div className="bg-surface-2 border border-border rounded-lg px-4 py-3">
             <p className="text-xs text-gray-500 mb-1">当页累计盈亏</p>
             <p className={clsx('text-base font-semibold font-mono', pnlColor(totalPnL))}>
-              {fmtPnL(totalPnL, 0)}
+              {fmtPnL(totalPnL)}
             </p>
           </div>
           <div className="bg-surface-2 border border-border rounded-lg px-4 py-3">
