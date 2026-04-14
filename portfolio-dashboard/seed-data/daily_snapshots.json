@@ -908,5 +908,19 @@
     "ytdPnLRate": 0.154549,
     "stockYtdPnL": 217985.96,
     "fundYtdPnL": 159925.36
+  },
+  {
+    "date": "2026-04-14",
+    "totalValue": 2847493.46,
+    "todayPnL": 31396.82,
+    "todayPnLRate": 0.011165,
+    "stockTodayPnL": 14686.8,
+    "fundTodayPnL": 16710.02,
+    "stockTodayPnLRate": 0.02059,
+    "fundTodayPnLRate": 0.021378,
+    "ytdPnL": 409308.14,
+    "ytdPnLRate": 0.167389,
+    "stockYtdPnL": 232672.76,
+    "fundYtdPnL": 176635.38
   }
 ]
