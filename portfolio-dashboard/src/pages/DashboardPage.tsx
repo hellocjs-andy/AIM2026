@@ -57,19 +57,23 @@ function PnLCard({
   to?: string
 }) {
   const inner = (
-    <div className="space-y-2">
-      <div className="flex items-start justify-between">
-        <div className="space-y-1.5">
+    <div className="flex flex-col h-full">
+      {/* Top section: fixed height so all 4 cards align the divider at same position */}
+      <div className="flex items-start justify-between" style={{ minHeight: '4.5rem' }}>
+        <div className="space-y-1">
           <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">{title}</p>
           <p className="text-xl sm:text-2xl font-bold text-gray-100 font-mono"><Num>{value}</Num></p>
-          {rate != null && <p className={clsx('text-sm font-medium', 'text-gray-400')}>{rate}</p>}
+          {/* Always reserve rate line height — show dash when null */}
+          <p className={clsx('text-sm font-medium', rate != null ? 'text-gray-400' : 'invisible')}>
+            {rate ?? '—'}
+          </p>
         </div>
-        <div className={clsx('w-10 h-10 rounded-lg flex items-center justify-center', iconColor)}>
+        <div className={clsx('w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0', iconColor)}>
           <Icon size={20} className="opacity-90" />
         </div>
       </div>
       {breakdown && breakdown.length > 0 && (
-        <div className="flex gap-3 pt-1.5 border-t border-white/8">
+        <div className="flex gap-3 pt-1.5 mt-1.5 border-t border-white/8">
           {breakdown.map(b => (
             <div key={b.label} className="flex-1">
               <p className="text-[10px] text-gray-600">{b.label}</p>
@@ -89,12 +93,12 @@ function PnLCard({
   )
   if (to) {
     return (
-      <Link to={to} className="block bg-surface-2 border border-border rounded-xl p-5 hover:border-accent/50 hover:bg-surface-3/60 transition-colors cursor-pointer">
+      <Link to={to} className="flex flex-col bg-surface-2 border border-border rounded-xl p-5 hover:border-accent/50 hover:bg-surface-3/60 transition-colors cursor-pointer">
         {inner}
       </Link>
     )
   }
-  return <div className="bg-surface-2 border border-border rounded-xl p-5">{inner}</div>
+  return <div className="flex flex-col bg-surface-2 border border-border rounded-xl p-5">{inner}</div>
 }
 
 // ── Year Target Progress ──────────────────────────────────────────────────────
