@@ -2,10 +2,11 @@ import { useParams, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import { ArrowLeft, TrendingUp, TrendingDown } from 'lucide-react'
-import { holdingsApi, closedApi } from '../api/client'
+import { holdingsApi, closedApi, dashboardApi } from '../api/client'
 import { Holding, ClosedPosition } from '../types'
 import { fmtPnL, fmtPct, fmtCNY, pnlColor, clsx, detectAssetType } from '../lib/utils'
 import { Badge } from '../components/ui/Badge'
+import { Num } from '../components/ui/Num'
 import dayjs from 'dayjs'
 
 type TypeFilter = 'all' | 'stock' | 'fund'
@@ -131,6 +132,11 @@ export default function PnLDetailPage() {
     queryFn: holdingsApi.getAll,
   })
 
+  const { data: summary } = useQuery({
+    queryKey: ['dashboard-summary'],
+    queryFn: dashboardApi.getSummary,
+  })
+
   // 今年盈亏额外加载已清仓数据
   const { data: closedPage } = useQuery({
     queryKey: ['closed-yearly', currentYear],
@@ -202,34 +208,59 @@ export default function PnLDetailPage() {
 
       <div className="px-4 sm:px-6 py-5 space-y-5">
         {/* Summary banner */}
-        <div className="bg-gradient-to-r from-accent/10 via-surface-2 to-surface-2 border border-accent/20 rounded-xl px-6 py-5">
-          <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">{cfg.label}合计</p>
-          <div className="flex items-end gap-6 flex-wrap">
-            <span className={clsx('text-3xl sm:text-4xl font-bold font-mono', pnlColor(total))}>
-              {fmtPnL(total)}
-            </span>
-            <div className="flex flex-col gap-1 pb-1 text-sm">
-              <div className="flex gap-5">
-                <span className="text-profit flex items-center gap-1">
-                  <TrendingUp size={14} />
-                  盈利 {profit.length} 只  {fmtCNY(grossProfit)}
-                </span>
-                <span className="text-loss flex items-center gap-1">
-                  <TrendingDown size={14} />
-                  亏损 {loss.length} 只  {fmtCNY(-grossLoss)}
-                </span>
-              </div>
-              {isYearly && closedRows.length > 0 && (
-                <div className="text-xs text-gray-400">
-                  含今年已清仓 {closedRows.length} 笔：
-                  <span className={clsx('font-mono ml-1', pnlColor(closedTotal))}>
-                    {fmtPnL(closedTotal)}
+        {(() => {
+          // 根据页面类型 + 过滤类型取对应盈亏率
+          const rateMap: Record<string, Record<string, number | null>> = {
+            today: {
+              all:   summary?.todayPnLRate   ?? null,
+              stock: summary?.stockTodayPnLRate ?? null,
+              fund:  summary?.fundTodayPnLRate  ?? null,
+            },
+            yearly: {
+              all:   summary?.yearReturnRate    ?? null,
+              stock: summary?.stockYearPnLRate  ?? null,
+              fund:  summary?.fundYearPnLRate   ?? null,
+            },
+          }
+          const displayRate = rateMap[type as string]?.[typeFilter] ?? null
+          return (
+            <div className="bg-gradient-to-r from-accent/10 via-surface-2 to-surface-2 border border-accent/20 rounded-xl px-6 py-5">
+              <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">{cfg.label}合计</p>
+              <div className="flex items-end gap-6 flex-wrap">
+                <div>
+                  <span className={clsx('text-3xl sm:text-4xl font-bold font-mono', pnlColor(total))}>
+                    <Num>{fmtPnL(total)}</Num>
                   </span>
+                  {displayRate != null && (
+                    <p className={clsx('text-sm font-mono mt-0.5', pnlColor(displayRate))}>
+                      {fmtPct(displayRate)}
+                    </p>
+                  )}
                 </div>
-              )}
+                <div className="flex flex-col gap-1 pb-1 text-sm">
+                  <div className="flex gap-5">
+                    <span className="text-profit flex items-center gap-1">
+                      <TrendingUp size={14} />
+                      盈利 {profit.length} 只  <Num>{fmtCNY(grossProfit)}</Num>
+                    </span>
+                    <span className="text-loss flex items-center gap-1">
+                      <TrendingDown size={14} />
+                      亏损 {loss.length} 只  <Num>{fmtCNY(-grossLoss)}</Num>
+                    </span>
+                  </div>
+                  {isYearly && closedRows.length > 0 && (
+                    <div className="text-xs text-gray-400">
+                      含今年已清仓 {closedRows.length} 笔：
+                      <span className={clsx('font-mono ml-1', pnlColor(closedTotal))}>
+                        <Num>{fmtPnL(closedTotal)}</Num>
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
+          )
+        })()}
 
         {/* Type filter tabs */}
         <div className="flex items-center gap-2">

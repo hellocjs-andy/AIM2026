@@ -143,6 +143,19 @@ function calcSummary() {
     + closed.filter(c => (c.closeDate||'').startsWith(yearStr) && detectType(c.code) === 'fund')
             .reduce((s, c) => s + (c.yearlyPnL !== undefined ? c.yearlyPnL : c.totalPnL), 0)
 
+  // 按类型计算年初市值，用于分类年收益率
+  const yearStartPrices = settings.year_start_prices    || {}
+  const yearStartQties  = settings.year_start_quantities|| {}
+  let stockYearStartValue = 0, fundYearStartValue = 0
+  Object.entries(yearStartQties).forEach(([code, qty]) => {
+    const price = yearStartPrices[code]
+    if (!price) return
+    if (detectType(code) === 'stock') stockYearStartValue += qty * price
+    else                               fundYearStartValue  += qty * price
+  })
+  const stockYearPnLRate = stockYearStartValue > 0 ? stockYearPnL / stockYearStartValue : 0
+  const fundYearPnLRate  = fundYearStartValue  > 0 ? fundYearPnL  / fundYearStartValue  : 0
+
   const stockTotalValue = stockValue + stockCash
   const fundTotalValue  = fundValue + fundCash
   const stockPositionRatio = stockTotalValue > 0 ? stockValue / stockTotalValue : 0
@@ -170,7 +183,7 @@ function calcSummary() {
     stockTodayPnL, fundTodayPnL, stockTodayPnLRate, fundTodayPnLRate,
     stockHoldingPnL, fundHoldingPnL,
     stockTotalPnL, fundTotalPnL,
-    stockYearPnL, fundYearPnL,
+    stockYearPnL, fundYearPnL, stockYearPnLRate, fundYearPnLRate,
     stockTotalValue, fundTotalValue,
     stockPositionRatio, fundPositionRatio, totalPositionRatio,
     stockRatioOfTotal, fundRatioOfTotal,

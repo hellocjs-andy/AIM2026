@@ -108,6 +108,8 @@ export interface DashboardSummary {
   fundTotalPnL: number
   stockYearPnL: number
   fundYearPnL: number
+  stockYearPnLRate: number
+  fundYearPnLRate: number
   stockPositionRatio: number    // 股票仓位 = stockValue/stockTotalValue
   fundPositionRatio: number     // 基金仓位 = fundValue/fundTotalValue
   totalPositionRatio: number    // 总仓位 = (stockValue+fundValue)/(stockTotal+fundTotal)

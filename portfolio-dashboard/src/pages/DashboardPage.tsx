@@ -580,8 +580,8 @@ export default function DashboardPage() {
             value={fmtPnL(summary.yearPnL)}
             rate={fmtPct(summary.yearReturnRate)}
             breakdown={[
-              { label: '股票', amount: summary.stockYearPnL },
-              { label: '基金', amount: summary.fundYearPnL  },
+              { label: '股票', amount: summary.stockYearPnL, rate: summary.stockYearPnLRate },
+              { label: '基金', amount: summary.fundYearPnL,  rate: summary.fundYearPnLRate  },
             ]}
             icon={Target}
             iconColor="bg-amber-500/15 text-amber-400"
