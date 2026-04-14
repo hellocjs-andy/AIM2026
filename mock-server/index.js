@@ -143,21 +143,15 @@ function calcSummary() {
     + closed.filter(c => (c.closeDate||'').startsWith(yearStr) && detectType(c.code) === 'fund')
             .reduce((s, c) => s + (c.yearlyPnL !== undefined ? c.yearlyPnL : c.totalPnL), 0)
 
-  // 按类型计算年初市值，用于分类年收益率
-  const yearStartPrices = settings.year_start_prices    || {}
-  const yearStartQties  = settings.year_start_quantities|| {}
-  let stockYearStartValue = 0, fundYearStartValue = 0
-  Object.entries(yearStartQties).forEach(([code, qty]) => {
-    const price = yearStartPrices[code]
-    if (!price) return
-    if (detectType(code) === 'stock') stockYearStartValue += qty * price
-    else                               fundYearStartValue  += qty * price
-  })
-  const stockYearPnLRate = stockYearStartValue > 0 ? stockYearPnL / stockYearStartValue : 0
-  const fundYearPnLRate  = fundYearStartValue  > 0 ? fundYearPnL  / fundYearStartValue  : 0
-
   const stockTotalValue = stockValue + stockCash
   const fundTotalValue  = fundValue + fundCash
+
+  // 按类型年收益率：用 yearStartValue × 当前各类占比 作分母
+  // 这样分子+分母加权后恰好等于整体 yearReturnRate，也更真实反映全年实际配置
+  const stockYearBase    = yearStartValue * (stockTotalValue / (stockTotalValue + fundTotalValue))
+  const fundYearBase     = yearStartValue * (fundTotalValue  / (stockTotalValue + fundTotalValue))
+  const stockYearPnLRate = stockYearBase > 0 ? stockYearPnL / stockYearBase : 0
+  const fundYearPnLRate  = fundYearBase  > 0 ? fundYearPnL  / fundYearBase  : 0
   const stockPositionRatio = stockTotalValue > 0 ? stockValue / stockTotalValue : 0
   const fundPositionRatio  = fundTotalValue > 0 ? fundValue / fundTotalValue : 0
   const totalPositionRatio = (stockTotalValue + fundTotalValue) > 0 ? (stockValue + fundValue) / (stockTotalValue + fundTotalValue) : 0
