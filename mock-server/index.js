@@ -10,10 +10,12 @@ const { URL } = require('url')
 const SEED = path.join(__dirname, '../portfolio-dashboard/seed-data')
 
 // ── 内存数据 ──────────────────────────────────────────────────────────────────
-let holdings = JSON.parse(fs.readFileSync(path.join(SEED, 'holdings.json')))
-let trades   = JSON.parse(fs.readFileSync(path.join(SEED, 'trades.json')))
-let closed   = JSON.parse(fs.readFileSync(path.join(SEED, 'closed_positions.json')))
-let settings = JSON.parse(fs.readFileSync(path.join(SEED, 'settings.json')))
+let holdings        = JSON.parse(fs.readFileSync(path.join(SEED, 'holdings.json')))
+let trades          = JSON.parse(fs.readFileSync(path.join(SEED, 'trades.json')))
+let closed          = JSON.parse(fs.readFileSync(path.join(SEED, 'closed_positions.json')))
+let settings        = JSON.parse(fs.readFileSync(path.join(SEED, 'settings.json')))
+let dailySnapshots  = JSON.parse(fs.readFileSync(path.join(SEED, 'daily_snapshots.json')))
+let benchmarkPrices = JSON.parse(fs.readFileSync(path.join(SEED, 'benchmark_prices.json')))
 
 // ── 工具 ──────────────────────────────────────────────────────────────────────
 function normCode(c) {
@@ -542,6 +544,38 @@ const server = http.createServer(async (req, res) => {
 
   if (method === 'POST' && p === '/api/holdings/refresh') {
     const result = await refreshAllPrices()
+    // Update today's daily snapshot after price refresh
+    try {
+      const s = calcSummary()
+      const todayStr = new Date().toISOString().slice(0, 10)
+      const idx = dailySnapshots.findIndex(r => r.date === todayStr)
+      const prevSnap = dailySnapshots.filter(r => r.date < todayStr).slice(-1)[0]
+      const prevYtdPnL = prevSnap ? prevSnap.ytdPnL : 0
+      const prevStockYtd = prevSnap ? prevSnap.stockYtdPnL : 0
+      const prevFundYtd = prevSnap ? prevSnap.fundYtdPnL : 0
+      const yearStartValue = parseFloat(settings.year_start_value) || 2445257.75
+      const ytdPnL = s.yearPnL
+      const stockYtdPnL = s.stockYearPnL
+      const fundYtdPnL = s.fundYearPnL
+      const todaySnap = {
+        date: todayStr,
+        totalValue: s.totalValue,
+        todayPnL: ytdPnL - prevYtdPnL,
+        todayPnLRate: s.totalValue > 0 ? Math.round(((ytdPnL - prevYtdPnL) / (s.totalValue - (ytdPnL - prevYtdPnL))) * 1e6) / 1e6 : 0,
+        stockTodayPnL: stockYtdPnL - prevStockYtd,
+        fundTodayPnL: fundYtdPnL - prevFundYtd,
+        stockTodayPnLRate: s.stockTodayPnLRate,
+        fundTodayPnLRate: s.fundTodayPnLRate,
+        ytdPnL,
+        ytdPnLRate: Math.round((ytdPnL / yearStartValue) * 1e6) / 1e6,
+        stockYtdPnL,
+        fundYtdPnL,
+      }
+      if (idx >= 0) dailySnapshots[idx] = todaySnap
+      else dailySnapshots.push(todaySnap)
+    } catch(e) {
+      console.error('[refresh] snapshot update failed:', e.message)
+    }
     return json(res, result)
   }
 
@@ -713,6 +747,129 @@ const server = http.createServer(async (req, res) => {
     const body = await readBody(req)
     settings   = { ...settings, ...body }
     return json(res, settings)
+  }
+
+  // Performance — daily snapshots
+  if (method === 'GET' && p === '/api/performance/daily') {
+    let list = [...dailySnapshots].sort((a, b) => a.date.localeCompare(b.date))
+    if (q.startDate) list = list.filter(r => r.date >= q.startDate)
+    if (q.endDate)   list = list.filter(r => r.date <= q.endDate)
+    return json(res, list)
+  }
+
+  // Performance — monthly aggregates
+  if (method === 'GET' && p === '/api/performance/monthly') {
+    const year = q.year ? parseInt(q.year) : new Date().getFullYear()
+    const yearStr = String(year)
+    const filtered = dailySnapshots
+      .filter(r => r.date.startsWith(yearStr))
+      .sort((a, b) => a.date.localeCompare(b.date))
+
+    // Group by month
+    const byMonth = {}
+    for (const snap of filtered) {
+      const m = parseInt(snap.date.slice(5, 7))
+      if (!byMonth[m]) byMonth[m] = []
+      byMonth[m].push(snap)
+    }
+
+    // Find last day of previous year (for Jan baseline)
+    const prevYearLast = dailySnapshots
+      .filter(r => r.date < yearStr + '-01-01')
+      .sort((a, b) => b.date.localeCompare(a.date))[0]
+
+    const months = Object.keys(byMonth).map(Number).sort((a, b) => a - b)
+    const result = months.map((m, idx) => {
+      const days = byMonth[m]
+      const lastDay  = days[days.length - 1]
+      // Previous month's last day (or prev year last)
+      let prevLastDay = null
+      if (m === 1) {
+        prevLastDay = prevYearLast || null
+      } else {
+        const prevMonth = m - 1
+        const prevDays  = byMonth[prevMonth]
+        if (prevDays && prevDays.length) prevLastDay = prevDays[prevDays.length - 1]
+      }
+      const prevYtdPnL      = prevLastDay ? prevLastDay.ytdPnL       : 0
+      const prevStockYtdPnL = prevLastDay ? prevLastDay.stockYtdPnL  : 0
+      const prevFundYtdPnL  = prevLastDay ? prevLastDay.fundYtdPnL   : 0
+      const prevTotalValue  = prevLastDay ? prevLastDay.totalValue    : parseFloat(settings.year_start_value)
+
+      const monthPnL       = lastDay.ytdPnL      - prevYtdPnL
+      const stockMonthPnL  = lastDay.stockYtdPnL - prevStockYtdPnL
+      const fundMonthPnL   = lastDay.fundYtdPnL  - prevFundYtdPnL
+      const monthPnLRate   = prevTotalValue > 0 ? monthPnL / prevTotalValue : 0
+
+      return {
+        year,
+        month: m,
+        totalValue:    lastDay.totalValue,
+        monthPnL:      Math.round(monthPnL * 100) / 100,
+        monthPnLRate:  Math.round(monthPnLRate * 1e6) / 1e6,
+        stockMonthPnL: Math.round(stockMonthPnL * 100) / 100,
+        fundMonthPnL:  Math.round(fundMonthPnL * 100) / 100,
+      }
+    })
+    return json(res, result)
+  }
+
+  // Benchmarks — historical prices
+  if (method === 'GET' && p === '/api/benchmarks') {
+    let list = [...benchmarkPrices].sort((a, b) => a.date.localeCompare(b.date))
+    if (q.startDate) list = list.filter(r => r.date >= q.startDate)
+    if (q.endDate)   list = list.filter(r => r.date <= q.endDate)
+    return json(res, list)
+  }
+
+  // Benchmarks — refresh today's prices from Tencent
+  if (method === 'POST' && p === '/api/benchmarks/refresh') {
+    const INDICES = {
+      sh000001: 'sh000001',
+      cy399006: 'sz399006',
+      kc000680: 'sh000680',
+      hs000300: 'sh000300',
+    }
+    try {
+      const symbols = Object.values(INDICES).join(',')
+      const url = 'http://qt.gtimg.cn/q=' + symbols
+      const resp = await fetch(url, {
+        headers: {
+          'Referer':    'https://finance.qq.com/',
+          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+        },
+      })
+      if (!resp.ok) throw new Error('tencent ' + resp.status)
+      const buf  = Buffer.from(await resp.arrayBuffer())
+      const text = buf.toString('latin1')
+      const lines = text.split(/;\s*/).filter(Boolean)
+      const priceMap = {}
+      for (const line of lines) {
+        const m = line.match(/v_([a-z]{2})(\d{6})="([^"]*)"/)
+        if (!m) continue
+        const sym   = m[1] + m[2]
+        const parts = m[3].split('~')
+        const close = parseFloat(parts[3])
+        const prev  = parseFloat(parts[4])
+        if (!isFinite(close) || close <= 0) continue
+        const changeRate = prev > 0 ? Math.round(((close - prev) / prev) * 1e6) / 1e6 : 0
+        priceMap[sym] = { close, changeRate }
+      }
+      const todayStr = new Date().toISOString().slice(0, 10)
+      // Map tencent symbols back to our keys
+      const entry = { date: todayStr }
+      const symToKey = { 'sh000001': 'sh000001', 'sz399006': 'cy399006', 'sh000680': 'kc000680', 'sh000300': 'hs000300' }
+      for (const [sym, key] of Object.entries(symToKey)) {
+        if (priceMap[sym]) entry[key] = priceMap[sym]
+      }
+      const idx = benchmarkPrices.findIndex(r => r.date === todayStr)
+      if (idx >= 0) benchmarkPrices[idx] = entry
+      else benchmarkPrices.push(entry)
+      return json(res, { updated: 4, date: todayStr })
+    } catch(e) {
+      console.error('[benchmarks/refresh] failed:', e.message)
+      return json(res, { error: e.message }, 500)
+    }
   }
 
   json(res, { error: 'not found', path: p }, 404)

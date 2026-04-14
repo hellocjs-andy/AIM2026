@@ -8,6 +8,9 @@ import type {
   ClosedPosition,
   ClosedPositionFilter,
   Paginated,
+  DailySnapshot,
+  MonthlySnapshot,
+  BenchmarkPrice,
 } from '../types'
 
 // ── Refresh prices response ──────────────────────────────────────────────────
@@ -127,4 +130,20 @@ export const settingsApi = {
 
   update: (settings: SettingsPayload) =>
     http.put<SettingsPayload>('/settings', settings).then(r => r.data),
+}
+
+// ── Performance ───────────────────────────────────────────────────────────────
+export const performanceApi = {
+  getDaily: (params?: { startDate?: string; endDate?: string }) =>
+    http.get<DailySnapshot[]>('/performance/daily', { params }).then(r => r.data),
+  getMonthly: (year?: number) =>
+    http.get<MonthlySnapshot[]>('/performance/monthly', { params: { year } }).then(r => r.data),
+}
+
+// ── Benchmarks ────────────────────────────────────────────────────────────────
+export const benchmarkApi = {
+  getHistory: (params?: { startDate?: string; endDate?: string }) =>
+    http.get<BenchmarkPrice[]>('/benchmarks', { params }).then(r => r.data),
+  refresh: () =>
+    http.post<{ updated: number; date: string }>('/benchmarks/refresh').then(r => r.data),
 }

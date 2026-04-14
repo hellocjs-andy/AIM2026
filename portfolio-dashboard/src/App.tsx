@@ -11,6 +11,7 @@ import ClosedPositionsPage from './pages/ClosedPositionsPage'
 import SettingsPage from './pages/SettingsPage'
 import PnLDetailPage from './pages/PnLDetailPage'
 import AllocationPage from './pages/AllocationPage'
+import PerformancePage from './pages/PerformancePage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -34,6 +35,7 @@ function AppContent() {
         <Route path="settings" element={<SettingsPage />} />
         <Route path="pnl/:type" element={<PnLDetailPage />} />
         <Route path="allocation" element={<AllocationPage />} />
+        <Route path="performance" element={<PerformancePage />} />
       </Route>
     </Routes>
   )

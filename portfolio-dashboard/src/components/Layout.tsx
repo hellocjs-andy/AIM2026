@@ -8,6 +8,7 @@ import {
   RefreshCw,
   ChevronRight,
   PieChart,
+  BarChart2,
   Eye,
   EyeOff,
 } from 'lucide-react'
@@ -17,6 +18,7 @@ import { useAuth } from '../contexts/auth'
 
 const NAV_ITEMS = [
   { to: '/', icon: LayoutDashboard, label: '概览', end: true },
+  { to: '/performance', icon: BarChart2, label: '收益分析' },
   { to: '/holdings', icon: TrendingUp, label: '持仓' },
   { to: '/trades', icon: ArrowLeftRight, label: '交易记录' },
   { to: '/closed', icon: Archive, label: '已清仓' },

@@ -148,3 +148,46 @@ export const TRADE_TYPES = [
   '买入', '卖出', '申购', '赎回', '红利再投', '分红', '除权除息',
   '修改持仓', '股息', '债券利息', '转换', '其他',
 ] as const
+
+// ── Performance / Daily Snapshot ─────────────────────────────────────────────
+export interface DailySnapshot {
+  date: string
+  totalValue: number
+  todayPnL: number
+  todayPnLRate: number
+  stockTodayPnL: number
+  fundTodayPnL: number
+  stockTodayPnLRate: number
+  fundTodayPnLRate: number
+  ytdPnL: number
+  ytdPnLRate: number
+  stockYtdPnL: number
+  fundYtdPnL: number
+}
+
+export interface MonthlySnapshot {
+  year: number
+  month: number          // 1-12
+  totalValue: number
+  monthPnL: number
+  monthPnLRate: number
+  stockMonthPnL: number
+  fundMonthPnL: number
+}
+
+export interface BenchmarkPrice {
+  date: string
+  sh000001: { close: number; changeRate: number }
+  cy399006: { close: number; changeRate: number }
+  kc000680: { close: number; changeRate: number }
+  hs000300: { close: number; changeRate: number }
+}
+
+export type BenchmarkKey = 'sh000001' | 'cy399006' | 'kc000680' | 'hs000300'
+
+export const BENCHMARK_CONFIG: Record<BenchmarkKey, { label: string; color: string }> = {
+  sh000001: { label: '上证指数', color: '#F59E0B' },
+  cy399006: { label: '创业板指', color: '#10B981' },
+  kc000680: { label: '科创板指', color: '#8B5CF6' },
+  hs000300: { label: '沪深300',  color: '#EC4899' },
+}
