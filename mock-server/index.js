@@ -550,22 +550,31 @@ const server = http.createServer(async (req, res) => {
       const todayStr = new Date().toISOString().slice(0, 10)
       const idx = dailySnapshots.findIndex(r => r.date === todayStr)
       const prevSnap = dailySnapshots.filter(r => r.date < todayStr).slice(-1)[0]
-      const prevYtdPnL = prevSnap ? prevSnap.ytdPnL : 0
-      const prevStockYtd = prevSnap ? prevSnap.stockYtdPnL : 0
-      const prevFundYtd = prevSnap ? prevSnap.fundYtdPnL : 0
       const yearStartValue = parseFloat(settings.year_start_value) || 2445257.75
-      const ytdPnL = s.yearPnL
-      const stockYtdPnL = s.stockYearPnL
-      const fundYtdPnL = s.fundYearPnL
+
+      // 用累加法：ytdPnL = 昨日快照 ytdPnL + 今日实时 todayPnL
+      // 避免用 calcSummary().yearPnL（仅含当前持仓 yearlyPnL，缺少历史部分减仓的已实现盈亏）
+      const prevYtdPnL    = prevSnap ? prevSnap.ytdPnL      : 0
+      const prevStockYtd  = prevSnap ? prevSnap.stockYtdPnL : 0
+      const prevFundYtd   = prevSnap ? prevSnap.fundYtdPnL  : 0
+
+      const todayPnL      = s.todayPnL
+      const stockTodayPnL = s.stockTodayPnL
+      const fundTodayPnL  = s.fundTodayPnL
+      const ytdPnL        = Math.round((prevYtdPnL   + todayPnL)      * 100) / 100
+      const stockYtdPnL   = Math.round((prevStockYtd + stockTodayPnL) * 100) / 100
+      const fundYtdPnL    = Math.round((prevFundYtd  + fundTodayPnL)  * 100) / 100
+
+      const prevTotal = prevSnap ? prevSnap.totalValue : yearStartValue
       const todaySnap = {
         date: todayStr,
-        totalValue: s.totalValue,
-        todayPnL: ytdPnL - prevYtdPnL,
-        todayPnLRate: s.totalValue > 0 ? Math.round(((ytdPnL - prevYtdPnL) / (s.totalValue - (ytdPnL - prevYtdPnL))) * 1e6) / 1e6 : 0,
-        stockTodayPnL: stockYtdPnL - prevStockYtd,
-        fundTodayPnL: fundYtdPnL - prevFundYtd,
-        stockTodayPnLRate: s.stockTodayPnLRate,
-        fundTodayPnLRate: s.fundTodayPnLRate,
+        totalValue: Math.round(s.totalValue * 100) / 100,
+        todayPnL:   Math.round(todayPnL * 100) / 100,
+        todayPnLRate: prevTotal > 0 ? Math.round((todayPnL / prevTotal) * 1e6) / 1e6 : 0,
+        stockTodayPnL: Math.round(stockTodayPnL * 100) / 100,
+        fundTodayPnL:  Math.round(fundTodayPnL  * 100) / 100,
+        stockTodayPnLRate: Math.round(s.stockTodayPnLRate * 1e6) / 1e6,
+        fundTodayPnLRate:  Math.round(s.fundTodayPnLRate  * 1e6) / 1e6,
         ytdPnL,
         ytdPnLRate: Math.round((ytdPnL / yearStartValue) * 1e6) / 1e6,
         stockYtdPnL,
