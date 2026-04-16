@@ -922,5 +922,33 @@
     "ytdPnLRate": 0.167389,
     "stockYtdPnL": 232672.76,
     "fundYtdPnL": 176635.38
+  },
+  {
+    "date": "2026-04-15",
+    "totalValue": 2833542.88,
+    "todayPnL": -9943.1,
+    "todayPnLRate": -0.003497,
+    "stockTodayPnL": -6324.2,
+    "fundTodayPnL": -3618.9,
+    "stockTodayPnLRate": -0.011757,
+    "fundTodayPnLRate": -0.004688,
+    "ytdPnL": 399365.04,
+    "ytdPnLRate": 0.163322,
+    "stockYtdPnL": 226348.56,
+    "fundYtdPnL": 173016.48
+  },
+  {
+    "date": "2026-04-16",
+    "totalValue": 2863690.09,
+    "todayPnL": 30147.21,
+    "todayPnLRate": 0.010639,
+    "stockTodayPnL": 20284.4,
+    "fundTodayPnL": 9862.81,
+    "stockTodayPnLRate": 0.038157,
+    "fundTodayPnLRate": 0.016252,
+    "ytdPnL": 429512.25,
+    "ytdPnLRate": 0.175651,
+    "stockYtdPnL": 246632.96,
+    "fundYtdPnL": 182879.29
   }
 ]

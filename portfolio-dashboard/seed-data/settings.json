@@ -2,7 +2,7 @@
   "year_target_rate": "0.30",
   "year_start_value": "2445257.75",
   "stock_cash": "1173073.96",
-  "fund_cash": "360565.03",
+  "fund_cash": "521828.47",
   "year_start_prices": {
     "159915": 3.186,
     "300308": 610.0,
@@ -28,11 +28,11 @@
     "006345": 1.0009
   },
   "allocation_targets": {
-    "growth": 0.60,
-    "aggressive": 0.20,
+    "growth": 0.6,
+    "aggressive": 0.2,
     "stable_gold": 0.05,
     "stable_nikkei": 0.05,
-    "flexible": 0.10
+    "flexible": 0.1
   },
   "allocation_config": {
     "159915": "growth",
