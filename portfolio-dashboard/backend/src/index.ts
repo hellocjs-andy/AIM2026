@@ -107,8 +107,10 @@ async function fetchFundPrices(codes: string[]): Promise<Map<string, { price: nu
         headers: { Referer: 'http://fund.eastmoney.com' },
       });
       const json = JSON.parse(data.replace(/^jsonpgz\(/, '').replace(/\)$/, ''));
-      const price = parseFloat(json.gsz || json.dwjz);       // estimated or official NAV
-      const changeRate = parseFloat(json.gszzl || '0') / 100;
+      // gsz 非交易时段可能为 "--"（truthy 但无效），需过滤后回退到 dwjz（官方净值）
+      const validNum = (v: any) => v && v !== '--' && !isNaN(parseFloat(v));
+      const price = parseFloat(validNum(json.gsz) ? json.gsz : json.dwjz);
+      const changeRate = validNum(json.gszzl) ? parseFloat(json.gszzl) / 100 : 0;
       const priceTime = json.gztime || json.jzrq || '';
       if (!isNaN(price) && price > 0) result.set(code, { price, changeRate, priceTime });
     } catch { /* individual fund fetch failure is non-fatal */ }

@@ -71,8 +71,10 @@ async function fetchFundPrices(codes) {
         { timeout: 8000, headers: { Referer: 'http://fund.eastmoney.com' } }
       );
       const json       = JSON.parse(data.replace(/^jsonpgz\(/, '').replace(/\)$/, ''));
-      const price      = parseFloat(json.gsz || json.dwjz);
-      const changeRate = parseFloat(json.gszzl || '0') / 100;
+      // gsz 非交易时段可能为 "--"（truthy 但无效），需过滤后再回退到 dwjz
+      const validNum = (v) => v && v !== '--' && !isNaN(parseFloat(v));
+      const price      = parseFloat(validNum(json.gsz) ? json.gsz : json.dwjz);
+      const changeRate = validNum(json.gszzl) ? parseFloat(json.gszzl) / 100 : 0;
       const priceTime  = json.gztime || json.jzrq || '';
       if (!isNaN(price) && price > 0) result.set(code, { price, changeRate, priceTime });
     } catch { /* 单只失败不影响整体 */ }
