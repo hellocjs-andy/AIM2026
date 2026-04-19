@@ -586,6 +586,26 @@ app.get('/api/benchmarks', (req, res) => {
   } catch (e) { res.status(500).json({ error: String(e) }); }
 });
 
+app.post('/api/benchmarks/import', (req, res) => {
+  try {
+    const { records } = req.body;
+    if (!Array.isArray(records)) return res.status(400).json({ error: 'records must be array' });
+    const upsert = db.prepare(`INSERT OR REPLACE INTO BenchmarkPrice
+      (date,sh000001,sh000001Chg,cy399006,cy399006Chg,kc000680,kc000680Chg,hs000300,hs000300Chg)
+      VALUES (@date,@sh000001,@sh000001Chg,@cy399006,@cy399006Chg,@kc000680,@kc000680Chg,@hs000300,@hs000300Chg)`);
+    db.transaction((items: any[]) => {
+      for (const b of items) upsert.run({
+        date: b.date,
+        sh000001: b.sh000001?.close ?? 0, sh000001Chg: b.sh000001?.changeRate ?? 0,
+        cy399006: b.cy399006?.close ?? 0, cy399006Chg: b.cy399006?.changeRate ?? 0,
+        kc000680: b.kc000680?.close ?? 0, kc000680Chg: b.kc000680?.changeRate ?? 0,
+        hs000300: b.hs000300?.close ?? 0, hs000300Chg: b.hs000300?.changeRate ?? 0,
+      });
+    })(records);
+    res.json({ imported: records.length });
+  } catch (e) { res.status(500).json({ error: String(e) }); }
+});
+
 app.post('/api/benchmarks/refresh', async (_req, res) => {
   try {
     // Fetch CSI indices from Tencent stock API
