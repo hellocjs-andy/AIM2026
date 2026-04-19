@@ -159,7 +159,11 @@ db.transaction(items => {
     monthlyPnL: h.monthlyPnL ?? 0, yearlyPnL: h.yearlyPnL ?? 0,
     positionRatio: h.positionRatio ?? 0, quantity: h.quantity ?? 0,
     holdingDays: h.holdingDays ?? null, latestChange: h.latestChange ?? 0,
-    latestPrice: h.latestPrice ?? 0, costPerUnit: h.costPerUnit ?? 0,
+    // If latestPrice not set, derive from value÷quantity (avoids ¥0.000 display)
+    latestPrice: (h.latestPrice && h.latestPrice > 0)
+      ? h.latestPrice
+      : (h.quantity > 0 ? (h.value ?? 0) / h.quantity : 0),
+    costPerUnit: h.costPerUnit ?? 0,
     breakEvenChange: h.breakEvenChange ?? null, monthReturn: h.monthReturn ?? null,
     threeMonthReturn: h.threeMonthReturn ?? null, sixMonthReturn: h.sixMonthReturn ?? null,
     yearReturn: h.yearReturn ?? null, priceTime: h.priceTime ?? null,
