@@ -114,7 +114,7 @@ async function fetchFundPrices(codes: string[]): Promise<Map<string, { price: nu
 }
 
 /** Refresh all holdings prices and update DB */
-async function refreshPrices(): Promise<{ updated: any[]; failed: string[] }> {
+async function refreshPrices(): Promise<{ updated: any[]; failed: { code: string; name: string; type: string }[] }> {
   const holdings = db.prepare('SELECT * FROM Holding').all() as any[];
   const stockCodes = holdings.filter(h => h.type === 'stock' || (h.type === 'fund' && isExchangeTraded(h.code))).map(h => h.code);
   const fundCodes  = holdings.filter(h => h.type === 'fund' && !isExchangeTraded(h.code)).map(h => h.code);
@@ -126,7 +126,7 @@ async function refreshPrices(): Promise<{ updated: any[]; failed: string[] }> {
   const allPrices = new Map([...stockPrices, ...fundPrices]);
 
   const updated: any[] = [];
-  const failed: string[] = [];
+  const failed: { code: string; name: string; type: string }[] = [];
   const now = new Date().toISOString();
 
   const updateStmt = db.prepare(`UPDATE Holding SET
@@ -137,9 +137,10 @@ async function refreshPrices(): Promise<{ updated: any[]; failed: string[] }> {
   db.transaction(() => {
     for (const h of holdings) {
       const p = allPrices.get(h.code);
-      if (!p) { failed.push(h.code); continue; }
-      const value    = h.quantity * p.price;
-      const todayPnL = h.quantity * (p.price - (h.latestPrice || p.price));
+      if (!p) { failed.push({ code: h.code, name: h.name, type: h.type }); continue; }
+      const value = h.quantity * p.price;
+      // Use API's own changeRate (today vs yesterday's close) — not DB price diff
+      const todayPnL = value * p.changeRate;
       updateStmt.run({ code: h.code, price: p.price, changeRate: p.changeRate,
         priceTime: p.priceTime, value, todayPnL, updatedAt: now });
       updated.push({ code: h.code, name: h.name, type: h.type, newPrice: p.price, changeRate: p.changeRate, priceTime: p.priceTime });
@@ -354,7 +355,7 @@ app.post('/api/holdings/refresh', async (_req, res) => {
     res.json({
       updated: updated.map(h => ({ code: h.code, name: h.name, type: h.type,
         newPrice: h.newPrice, changeRate: h.changeRate, priceTime: h.priceTime })),
-      unchanged: [], failed: failed.map(code => ({ code })),
+      unchanged: [], failed,
       fetchedAt: new Date().toISOString(),
     });
   } catch (e) { res.status(500).json({ error: String(e) }); }
