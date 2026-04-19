@@ -1,0 +1,104 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Holding {
+  code             String   @id
+  name             String
+  type             String   @default("fund")
+  value            Float    @default(0)
+  todayPnL         Float    @default(0)
+  todayPnLRate     Float    @default(0)
+  holdingPnL       Float    @default(0)
+  holdingPnLRate   Float    @default(0)
+  totalPnL         Float    @default(0)
+  weeklyPnL        Float    @default(0)
+  monthlyPnL       Float    @default(0)
+  yearlyPnL        Float    @default(0)
+  positionRatio    Float    @default(0)
+  quantity         Float    @default(0)
+  holdingDays      Int?
+  latestChange     Float    @default(0)
+  latestPrice      Float    @default(0)
+  costPerUnit      Float    @default(0)
+  breakEvenChange  Float?
+  monthReturn      Float?
+  threeMonthReturn Float?
+  sixMonthReturn   Float?
+  yearReturn       Float?
+  priceTime        String?
+  priceSource      String?
+  updatedAt        DateTime @default(now()) @updatedAt
+}
+
+model Trade {
+  id         Int      @id @default(autoincrement())
+  tradeDate  String
+  tradeTime  String?
+  code       String
+  name       String
+  type       String
+  quantity   Float
+  price      Float?
+  amount     Float
+  dealAmount Float
+  fee        Float    @default(0)
+  note       String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now()) @updatedAt
+}
+
+model ClosedPosition {
+  id          Int    @id @default(autoincrement())
+  closeDate   String
+  code        String
+  name        String
+  totalPnL    Float  @default(0)
+  yearlyPnL   Float?
+  pnLRate     Float  @default(0)
+  marketPnL   Float  @default(0)
+  outperform  Float  @default(0)
+  buyAvg      Float  @default(0)
+  sellAvg     Float  @default(0)
+  daysAgo     Int    @default(0)
+  holdingDays Int    @default(0)
+  tradeFee    Float  @default(0)
+  buildDate   String
+}
+
+model DailySnapshot {
+  date               String @id
+  totalValue         Float  @default(0)
+  todayPnL           Float  @default(0)
+  todayPnLRate       Float  @default(0)
+  stockTodayPnL      Float  @default(0)
+  fundTodayPnL       Float  @default(0)
+  stockTodayPnLRate  Float  @default(0)
+  fundTodayPnLRate   Float  @default(0)
+  ytdPnL             Float  @default(0)
+  ytdPnLRate         Float  @default(0)
+  stockYtdPnL        Float  @default(0)
+  fundYtdPnL         Float  @default(0)
+}
+
+model BenchmarkPrice {
+  date        String @id
+  sh000001    Float  @default(0)
+  sh000001Chg Float  @default(0)
+  cy399006    Float  @default(0)
+  cy399006Chg Float  @default(0)
+  kc000680    Float  @default(0)
+  kc000680Chg Float  @default(0)
+  hs000300    Float  @default(0)
+  hs000300Chg Float  @default(0)
+}
+
+model Setting {
+  key   String @id
+  value String
+}

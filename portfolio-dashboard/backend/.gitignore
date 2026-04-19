@@ -1,0 +1,8 @@
+node_modules/
+dist/
+logs/
+data/*.db
+data/*.db-shm
+data/*.db-wal
+data/*.json
+.env
