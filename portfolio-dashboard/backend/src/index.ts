@@ -57,15 +57,18 @@ function holdingRow(h: any) {
 // ── Price refresh ─────────────────────────────────────────────────────────────
 /** Convert holding code to Tencent market prefix */
 function toTencentCode(code: string): string {
-  if (/^(51|50|11|13)/.test(code)) return 'sh' + code;   // Shanghai ETF / bond ETF
+  if (/^(51|50|13)/.test(code)) return 'sh' + code;      // Shanghai ETF (510xxx, 511xxx, 513xxx...)
   if (/^(15|16|12)/.test(code)) return 'sz' + code;      // Shenzhen ETF
   if (/^6/.test(code)) return 'sh' + code;                // Shanghai stock
-  return 'sz' + code;                                     // Shenzhen stock (0xx, 3xx)
+  return 'sz' + code;                                     // Shenzhen stock (0xx, 3xx, 688xx)
 }
 
-/** Determine if a fund code should use stock API (exchange-traded ETF) */
+/** Determine if a fund code should use stock/ETF API (exchange-traded)
+ *  110xxx = 易方达/南方 场外开放式债基，NOT exchange-traded → use fund NAV API
+ *  51xxxx/50xxxx/13xxxx = Shanghai ETF，15xxxx/16xxxx/12xxxx = Shenzhen ETF
+ */
 function isExchangeTraded(code: string): boolean {
-  return /^(51|50|15|16|11|12|13)/.test(code);
+  return /^(51|50|15|16|12|13)/.test(code);
 }
 
 /** Fetch stock/ETF prices from Tencent API */
