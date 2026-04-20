@@ -97,21 +97,28 @@ async function fetchStockPrices(codes: string[]): Promise<Map<string, { price: n
   return result;
 }
 
-/** Fetch fund NAV from EastMoney/1234567 */
+/** Fetch OTC fund confirmed NAV from EastMoney lsjz API.
+ *  Always returns the latest *confirmed* NAV (已确认净值 DWJZ), never intraday estimates.
+ *  During trading hours this will be the previous trading day's NAV, which is correct:
+ *  fund companies only publish confirmed NAV after 15:00 market close (usually by ~21:00).
+ */
 async function fetchFundPrices(codes: string[]): Promise<Map<string, { price: number; changeRate: number; priceTime: string }>> {
   const result = new Map();
   await Promise.allSettled(codes.map(async (code) => {
     try {
-      const { data } = await axios.get(`http://fundgz.1234567.com.cn/js/${code}.js?rt=${Date.now()}`, {
+      const { data } = await axios.get('https://api.fund.eastmoney.com/f10/lsjz', {
+        params: { fundCode: code, pageIndex: 1, pageSize: 1, callback: '', token: 'webapi' },
         timeout: 8000,
-        headers: { Referer: 'http://fund.eastmoney.com' },
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+          Referer: 'https://fundf10.eastmoney.com/',
+        },
       });
-      const json = JSON.parse(data.replace(/^jsonpgz\(/, '').replace(/\)$/, ''));
-      // gsz 非交易时段可能为 "--"（truthy 但无效），需过滤后回退到 dwjz（官方净值）
-      const validNum = (v: any) => v && v !== '--' && !isNaN(parseFloat(v));
-      const price = parseFloat(validNum(json.gsz) ? json.gsz : json.dwjz);
-      const changeRate = validNum(json.gszzl) ? parseFloat(json.gszzl) / 100 : 0;
-      const priceTime = json.gztime || json.jzrq || '';
+      const item = data?.Data?.LSJZList?.[0];
+      if (!item || !item.DWJZ) return;
+      const price = parseFloat(item.DWJZ);
+      const changeRate = parseFloat(item.JZZZL || '0') / 100;
+      const priceTime = item.FSRQ || '';   // 净值日期，格式 YYYY-MM-DD
       if (!isNaN(price) && price > 0) result.set(code, { price, changeRate, priceTime });
     } catch { /* individual fund fetch failure is non-fatal */ }
   }));
