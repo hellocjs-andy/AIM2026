@@ -44,9 +44,9 @@ async function fetchStockPrices(codes) {
   if (!codes.length) return result;
   const query = codes.map(toTencentCode).join(',');
   try {
-    const { data } = await axios.get(`http://qt.gtimg.cn/q=${query}`, {
+    const { data } = await axios.get(`https://qt.gtimg.cn/q=${query}`, {
       timeout: 10000,
-      headers: { ...BROWSER_HEADERS, Referer: 'http://finance.qq.com' },
+      headers: { ...BROWSER_HEADERS, Referer: 'https://finance.qq.com' },
     });
     for (const line of data.split('\n')) {
       const m = line.match(/v_[a-z]{2}(\d+)="([^"]+)"/);
@@ -152,14 +152,15 @@ const INDICES = [
 
 async function fetchIndexHistory(tcCode, startDate, endDate) {
   // startDate/endDate: 'YYYY-MM-DD'
+  // Must use HTTPS (HTTP 302 redirects) and append ',qfq' to param (required by fqkline API)
   const varName = `kline_day_${tcCode}`;
   try {
-    const { data } = await axios.get('http://web.ifzq.gtimg.cn/appstock/app/fqkline/get', {
-      params: { _var: varName, param: `${tcCode},day,${startDate},${endDate},400` },
-      headers: { ...BROWSER_HEADERS, Referer: 'http://finance.qq.com' },
+    const { data } = await axios.get('https://web.ifzq.gtimg.cn/appstock/app/fqkline/get', {
+      params: { _var: varName, param: `${tcCode},day,${startDate},${endDate},400,qfq` },
+      headers: { ...BROWSER_HEADERS, Referer: 'https://finance.qq.com' },
       timeout: 15000,
     });
-    // 响应格式: kline_day_sh000001={...}
+    // 响应格式: kline_day_sh000001={"code":0,"data":{"sh000001":{"day":[[date,open,close,high,low,vol],...]}}}
     const jsonStr = data.replace(/^[^=]+=/, '');
     const json    = JSON.parse(jsonStr);
     return json?.data?.[tcCode]?.day || [];
