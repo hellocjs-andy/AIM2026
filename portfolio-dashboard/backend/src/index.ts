@@ -98,27 +98,45 @@ async function fetchStockPrices(codes: string[]): Promise<Map<string, { price: n
 }
 
 /** Fetch OTC fund confirmed NAV from EastMoney lsjz API.
- *  Always returns the latest *confirmed* NAV (已确认净值 DWJZ), never intraday estimates.
- *  During trading hours this will be the previous trading day's NAV, which is correct:
- *  fund companies only publish confirmed NAV after 15:00 market close (usually by ~21:00).
+ *
+ *  Problem: lsjz inserts today's *estimated* NAV as the first record during trading hours.
+ *  Fix: fetch 2 records; skip any record whose date is today if before 21:00 Beijing time
+ *  (fund companies typically finish publishing confirmed NAV by ~21:00).
+ *  After 21:00 we trust today's record as confirmed.
  */
 async function fetchFundPrices(codes: string[]): Promise<Map<string, { price: number; changeRate: number; priceTime: string }>> {
   const result = new Map();
+
+  // Beijing time (UTC+8)
+  const nowBJ  = new Date(Date.now() + 8 * 3600 * 1000);
+  const todayBJ = nowBJ.toISOString().slice(0, 10);   // 'YYYY-MM-DD'
+  const hourBJ  = nowBJ.getUTCHours();
+  // Before 21:00 Beijing, today's record in lsjz may be intraday estimate — skip it
+  const navPublished = hourBJ >= 21;
+
   await Promise.allSettled(codes.map(async (code) => {
     try {
       const { data } = await axios.get('https://api.fund.eastmoney.com/f10/lsjz', {
-        params: { fundCode: code, pageIndex: 1, pageSize: 1, callback: '', token: 'webapi' },
+        params: { fundCode: code, pageIndex: 1, pageSize: 2, callback: '', token: 'webapi' },
         timeout: 8000,
         headers: {
           'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
           Referer: 'https://fundf10.eastmoney.com/',
         },
       });
-      const item = data?.Data?.LSJZList?.[0];
-      if (!item || !item.DWJZ) return;
-      const price = parseFloat(item.DWJZ);
+      const list: any[] = data?.Data?.LSJZList ?? [];
+      if (!list.length) return;
+
+      // Pick the first record that is NOT today's unconfirmed estimate
+      let item = list[0];
+      if (!navPublished && item.FSRQ === todayBJ) {
+        item = list[1] ?? list[0];  // fall back to previous trading day
+      }
+      if (!item?.DWJZ) return;
+
+      const price      = parseFloat(item.DWJZ);
       const changeRate = parseFloat(item.JZZZL || '0') / 100;
-      const priceTime = item.FSRQ || '';   // 净值日期，格式 YYYY-MM-DD
+      const priceTime  = item.FSRQ || '';   // 净值日期 YYYY-MM-DD
       if (!isNaN(price) && price > 0) result.set(code, { price, changeRate, priceTime });
     } catch { /* individual fund fetch failure is non-fatal */ }
   }));
